@@ -1,9 +1,9 @@
 {
-  "version": "1.0.0",
-  "published": "2026-06-14",
-  "notes": "First public build \u2014 browser app at localhost:1337 (universal, no Rosetta), menu-bar launcher. YouTube + Shorts, playlists/channels, MP3, quality presets, choose-folder, per-browser cookie guidance, self-update, yt-dlp refresh. Phone: stable hostname + one-time PIN (Tailscale away) + save-to-device. App icon + favicon.",
-  "code_url": "https://raw.githubusercontent.com/goldenpathwalkthroughs/tube-ripper/main/releases/tuberipper-1.0.0.zip",
-  "code_sha256": "af38173f00292c8b1cbcb593a474e75c047a0b29bd93433b8045cf1ba462b64b",
+  "version": "1.0.1",
+  "published": "2026-06-15",
+  "notes": "Fix: handle all Apple touch-icon sizes; stray/stale URLs now land on the app instead of a 404 page; optional TR_DEBUG request logging.",
+  "code_url": "https://raw.githubusercontent.com/goldenpathwalkthroughs/tube-ripper/main/releases/tuberipper-1.0.1.zip",
+  "code_sha256": "49607dad57493af706c7d9e8f48b7072cf4a1220a3f09d310fedfaccb9e74299",
   "requires_full": false,
   "full_url": "https://github.com/goldenpathwalkthroughs/tube-ripper/releases/latest"
 }

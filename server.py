@@ -37,7 +37,7 @@ from http.cookies import SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs, quote
 
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HOME = os.path.realpath(os.path.expanduser("~"))
@@ -923,8 +923,12 @@ LOGIN_PAGE = """<!DOCTYPE html><html><head><meta charset="utf-8">
 #  HTTP handler
 # --------------------------------------------------------------------------- #
 class Handler(BaseHTTPRequestHandler):
-    def log_message(self, *a):
-        pass  # quiet
+    def log_message(self, fmt, *args):
+        if os.environ.get("TR_DEBUG"):
+            try:
+                sys.stderr.write("[tr] %s %s\n" % (self.client_address[0], fmt % args))
+            except Exception:
+                pass
 
     def _json(self, obj, code=200):
         body = json.dumps(obj).encode()
@@ -1006,9 +1010,11 @@ class Handler(BaseHTTPRequestHandler):
         if not self._ip_ok():
             return
         # Icons are public (the login page and bookmarks need them, pre-auth).
+        # iOS requests several sized variants (apple-touch-icon-152x152.png …) —
+        # serve the one icon for any of them so none 404.
         if path in ("/favicon.svg", "/favicon.ico"):
             return self._serve_static(os.path.join(HERE, "favicon.svg"), "image/svg+xml")
-        if path in ("/apple-touch-icon.png", "/apple-touch-icon-precomposed.png"):
+        if path.startswith("/apple-touch-icon"):
             return self._serve_static(os.path.join(HERE, "apple-touch-icon.png"), "image/png")
         if not self._authed(qs):
             # Unknown device: show the PIN login for the page, refuse everything else.
@@ -1084,7 +1090,13 @@ class Handler(BaseHTTPRequestHandler):
             except Exception:
                 pass
             return self._json({"ok": True, "dir": target})
-        self.send_error(404)
+        # Unknown route: API gets a clean JSON 404; any other navigation is
+        # bounced to the app so a stray/stale URL never shows a raw 404 page.
+        if path.startswith("/api/"):
+            return self._json({"error": "unknown endpoint"}, 404)
+        self.send_response(302)
+        self.send_header("Location", "/")
+        self.end_headers()
 
     # ---- POST ----
     def do_POST(self):
@@ -1169,7 +1181,7 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/ytdlp/refresh":
             return self._json(refresh_ytdlp())
 
-        self.send_error(404)
+        return self._json({"error": "unknown endpoint"}, 404)
 
     def _serve_download(self, fp):
         """Stream a downloaded file as an attachment, but only if it really
