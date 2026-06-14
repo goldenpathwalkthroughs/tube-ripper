@@ -829,10 +829,15 @@ class Handler(BaseHTTPRequestHandler):
     def _gate(self, qs):
         """Return None if the request may proceed, else send a denial and
         return the reason string."""
-        if not ip_allowed(self.client_address[0]):
+        addr = self.client_address[0]
+        if not ip_allowed(addr):
             self._deny(403, "FORBIDDEN — this address is outside the allowed "
                           "local network. The internet cannot reach this tool.")
             return "ip"
+        # Loopback is this machine's own user — no key needed, so the local URL
+        # can stay clean (http://localhost:PORT). The key still gates LAN access.
+        if addr == "::1" or addr.startswith("127."):
+            return None
         if not secrets.compare_digest(self._supplied_token(qs), ACCESS_TOKEN):
             self._deny(401, "ACCESS DENIED — missing or wrong key. Open the "
                           "exact URL printed in the server terminal "
@@ -1013,13 +1018,14 @@ def _port_open(port, host="127.0.0.1"):
 
 def _open_browser(port):
     import webbrowser
-    webbrowser.open(f"http://127.0.0.1:{port}/?key={ACCESS_TOKEN}")
+    # Clean local URL — loopback skips the key gate.
+    webbrowser.open(f"http://localhost:{port}/")
 
 
 def main():
     global HTTPD
     app_mode = APP_MODE or ("--app" in sys.argv)
-    want_port = int(os.environ.get("PORT", "7654"))
+    want_port = int(os.environ.get("PORT", "1337"))   # leet, on-theme, > 1024
     host = os.environ.get("HOST", "0.0.0.0")
 
     # Single-instance: if launched again while already running, just reopen the
@@ -1046,7 +1052,7 @@ def main():
     lan = lan_ip()
     print("=" * 64)
     print("  TUBE-RIPPER DELUXE 2000  ::  backend online")
-    print(f"  >> this machine : http://127.0.0.1:{port}/?key={key}")
+    print(f"  >> this machine : http://localhost:{port}/")
     if host != "127.0.0.1" and lan != "127.0.0.1":
         print(f"  >> other devices: http://{lan}:{port}/?key={key}")
         print(f"     (same Wi-Fi/LAN only — the public internet is blocked)")

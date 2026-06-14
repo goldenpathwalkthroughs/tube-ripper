@@ -90,11 +90,11 @@ cp "$ROOT/server.py" "$ROOT/index.html" "$RES/app/"
 cp "$PKG/Info.plist" "$APP/Contents/Info.plist"
 [ -f "$PKG/app.icns" ] && cp "$PKG/app.icns" "$RES/app.icns" || true
 
-say "compile native app (universal2: arm64 + x86_64)"
+say "compile native launcher (universal2: arm64 + x86_64)"
 xcrun swiftc -O -target arm64-apple-macos11   "$PKG/TubeRipperApp.swift" \
-    -framework Cocoa -framework WebKit -o "$BUILD/tr-arm64"
+    -framework Cocoa -o "$BUILD/tr-arm64"
 xcrun swiftc -O -target x86_64-apple-macos11  "$PKG/TubeRipperApp.swift" \
-    -framework Cocoa -framework WebKit -o "$BUILD/tr-x86_64"
+    -framework Cocoa -o "$BUILD/tr-x86_64"
 lipo -create "$BUILD/tr-arm64" "$BUILD/tr-x86_64" -o "$MACOS/TubeRipper"
 chmod +x "$MACOS/TubeRipper"
 say "main executable arch: $(lipo -archs "$MACOS/TubeRipper")"

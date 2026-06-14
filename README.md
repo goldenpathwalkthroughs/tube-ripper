@@ -41,10 +41,11 @@ your home. On each one:
 2. Double-click **“Open Me First.command”** once (clears the macOS quarantine and
    launches it). Or right-click the app → Open → Open.
 
-The app opens in **its own native window** (a WKWebView — not your browser),
-runs entirely locally, and is a real universal binary so it launches natively on
-both Apple Silicon and Intel. It's ad-hoc signed — no Apple Developer account
-needed; the one-time unblock is only because it's distributed outside the App Store.
+The app opens the UI in your default browser at **http://localhost:1337**, runs
+entirely locally, and is a real universal binary (a tiny native launcher) so it
+starts natively on both Apple Silicon and Intel — no Rosetta. It's ad-hoc signed
+— no Apple Developer account needed; the one-time unblock is only because it's
+distributed outside the App Store.
 
 See [packaging/INSTALL.txt](packaging/INSTALL.txt) for the end-user instructions
 and [packaging/build_app.sh](packaging/build_app.sh) for how the bundle is built
@@ -73,12 +74,12 @@ including the rare "major update" path for new bundled binaries — are in
 ```
 
 That ensures `yt-dlp` is installed (into a local `.venv` if needed), starts the
-server, and opens <http://127.0.0.1:7654/> in your browser.
+server, and opens <http://localhost:1337/> in your browser.
 
 Already have `yt-dlp` on your PATH? You can skip the script:
 
 ```bash
-python3 server.py        # then open http://127.0.0.1:7654/
+python3 server.py        # then open http://localhost:1337/
 ```
 
 ## Requirements

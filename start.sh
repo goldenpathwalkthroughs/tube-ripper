@@ -4,7 +4,7 @@
 set -e
 cd "$(dirname "$0")"
 
-PORT="${PORT:-7654}"
+PORT="${PORT:-1337}"
 
 # 1. ffmpeg (needed to merge video+audio and to make MP3s)
 if ! command -v ffmpeg >/dev/null 2>&1; then
@@ -23,13 +23,6 @@ else
   PY="python3"
 fi
 
-# Ensure a stable access key exists, so we can open the browser straight to it.
-if [ ! -s .access_token ]; then
-  "$PY" -c "import secrets;open('.access_token','w').write(secrets.token_urlsafe(15))"
-  chmod 600 .access_token 2>/dev/null || true
-fi
-KEY="$(cat .access_token)"
-
-echo ">> launching backend on http://127.0.0.1:${PORT}/  (LAN access enabled, key-gated)"
-( sleep 1; open "http://127.0.0.1:${PORT}/?key=${KEY}" >/dev/null 2>&1 || true ) &
+echo ">> launching backend on http://localhost:${PORT}/  (LAN access enabled, key-gated)"
+( sleep 1; open "http://localhost:${PORT}/" >/dev/null 2>&1 || true ) &
 exec "$PY" server.py

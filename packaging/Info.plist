@@ -12,11 +12,8 @@
   <key>CFBundleIconFile</key>         <string>app.icns</string>
   <key>LSMinimumSystemVersion</key>   <string>11.0</string>
   <key>NSHighResolutionCapable</key>  <true/>
-  <!-- The UI is served from the bundled server on 127.0.0.1 (plain HTTP) and
-       shown in a WKWebView; allow local networking so it can load. -->
-  <key>NSAppTransportSecurity</key>
-  <dict>
-    <key>NSAllowsLocalNetworking</key><true/>
-  </dict>
+  <!-- Background agent: it starts the local server and opens the UI in the
+       user's default browser, then runs quietly (quit from the page). -->
+  <key>LSUIElement</key>             <true/>
 </dict>
 </plist>

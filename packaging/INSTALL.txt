@@ -18,7 +18,7 @@ INSTALL (about 30 seconds)
     If macOS warns that it's from an unidentified developer:
     RIGHT-CLICK it → Open → Open. (You only do this once.)
 
-    That's it — TubeRipper opens in its own window.
+    That's it — TubeRipper opens in your browser at http://localhost:1337
 
    (Alternative, same effect, if you prefer the app icon:
     right-click TubeRipper.app → Open → Open. One time only.)
@@ -26,9 +26,9 @@ INSTALL (about 30 seconds)
 ────────────────────────────────────────────────────────────
 USING IT
 ────────────────────────────────────────────────────────────
-•  It opens in its own app window. Paste a YouTube link,
-   ANALYZE, pick a quality, RIP IT. Files go to your Downloads
-   folder by default (change it in the SAVE TO box).
+•  It opens in your browser at http://localhost:1337 — bookmark it.
+   Paste a YouTube link, ANALYZE, pick a quality, RIP IT. Files go to
+   your Downloads folder by default (change it in the SAVE TO box).
 
 •  For HD / 4K: the SESSION COOKIES menu auto-picks your browser.
    Make sure you're signed in to YouTube in that browser.
