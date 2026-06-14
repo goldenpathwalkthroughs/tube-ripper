@@ -898,6 +898,14 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(job)
         if path == "/api/browse":
             return self._json({"path": pick_folder()})
+        if path == "/api/fda":
+            # open System Settings → Privacy & Security → Full Disk Access
+            try:
+                subprocess.Popen(["open",
+                    "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles"])
+            except Exception:
+                pass
+            return self._json({"ok": True})
         if path == "/api/open":
             want = (qs.get("dir") or [""])[0]
             try:
