@@ -55,6 +55,9 @@ else:
 
 HTTPD = None  # set in main(); used by /api/quit
 
+# Wrapped: launched inside the native Swift window (WKWebView), not a browser.
+WRAPPED = os.environ.get("TR_WRAPPED") == "1"
+
 # Default destination: the macOS Downloads folder (override with DOWNLOAD_DIR).
 DEFAULT_DEST = os.environ.get("DOWNLOAD_DIR") or os.path.join(HOME, "Downloads")
 
@@ -870,7 +873,8 @@ class Handler(BaseHTTPRequestHandler):
                               "ytdlp_version": ytdlp_version(),
                               "ffmpeg": have_ffmpeg(),
                               "default_dest": DEFAULT_DEST,
-                              "home": HOME, "app": APP_MODE, "version": VERSION,
+                              "home": HOME, "app": APP_MODE, "wrapped": WRAPPED,
+                              "version": VERSION,
                               "platforms": [{"name": p["name"], "support": p["support"]}
                                             for p in PLATFORMS]})
         if path == "/api/update/check":
@@ -1019,8 +1023,9 @@ def main():
     host = os.environ.get("HOST", "0.0.0.0")
 
     # Single-instance: if launched again while already running, just reopen the
-    # browser on the existing server and exit.
-    if app_mode and _port_open(want_port):
+    # browser on the existing server and exit. (Not in wrapped mode — the native
+    # window manages its own server on a private port.)
+    if app_mode and not WRAPPED and _port_open(want_port):
         _open_browser(want_port)
         return
 
@@ -1050,7 +1055,7 @@ def main():
         f"   ffmpeg: {'OK' if have_ffmpeg() else 'MISSING'}")
     print("=" * 64)
 
-    if app_mode:
+    if app_mode and not WRAPPED:
         threading.Timer(0.8, _open_browser, args=(port,)).start()
 
     try:

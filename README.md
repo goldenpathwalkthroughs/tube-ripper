@@ -41,9 +41,10 @@ your home. On each one:
 2. Double-click **“Open Me First.command”** once (clears the macOS quarantine and
    launches it). Or right-click the app → Open → Open.
 
-The app opens in the browser, runs entirely locally, and has a **⏻ QUIT APP**
-button. It's ad-hoc signed — no Apple Developer account needed; the one-time
-unblock is only because it's distributed outside the App Store.
+The app opens in **its own native window** (a WKWebView — not your browser),
+runs entirely locally, and is a real universal binary so it launches natively on
+both Apple Silicon and Intel. It's ad-hoc signed — no Apple Developer account
+needed; the one-time unblock is only because it's distributed outside the App Store.
 
 See [packaging/INSTALL.txt](packaging/INSTALL.txt) for the end-user instructions
 and [packaging/build_app.sh](packaging/build_app.sh) for how the bundle is built

@@ -612,7 +612,8 @@ fetch(api("/api/health")).then(r=>r.json()).then(h=>{
   let saved="";try{saved=localStorage.getItem("tr_dest")||"";}catch(e){}
   $("#dest").value = saved || friendly(h.default_dest || "~/Downloads");
   buildVerLine(h.version, h.ytdlp_version, !!h.app);
-  if(h.app){ $("#quitwrap").style.display="block"; setTimeout(()=>checkUpdates(false),1400); }
+  if(h.app && !h.wrapped){ $("#quitwrap").style.display="block"; }
+  if(h.app){ setTimeout(()=>checkUpdates(false),1400); }
   if(h.platforms){
     const full=h.platforms.filter(p=>p.support==="full").map(p=>p.name);
     const exp=h.platforms.filter(p=>p.support==="experimental").map(p=>p.name);

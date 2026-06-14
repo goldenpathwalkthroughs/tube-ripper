@@ -84,12 +84,20 @@ if [ ! -f "$PKG/app.icns" ] && [ -x "$ROOT/.venv/bin/python3" ]; then
   "$ROOT/.venv/bin/python3" "$PKG/make_icon.py" || say "icon generation skipped"
 fi
 
-# ---- 5. app code + launcher + plist + icon ----
+# ---- 5. app code + native launcher (universal2) + plist + icon ----
 say "copy app code"
 cp "$ROOT/server.py" "$ROOT/index.html" "$RES/app/"
-cp "$PKG/launcher.sh" "$MACOS/TubeRipper"; chmod +x "$MACOS/TubeRipper"
 cp "$PKG/Info.plist" "$APP/Contents/Info.plist"
 [ -f "$PKG/app.icns" ] && cp "$PKG/app.icns" "$RES/app.icns" || true
+
+say "compile native app (universal2: arm64 + x86_64)"
+xcrun swiftc -O -target arm64-apple-macos11   "$PKG/TubeRipperApp.swift" \
+    -framework Cocoa -framework WebKit -o "$BUILD/tr-arm64"
+xcrun swiftc -O -target x86_64-apple-macos11  "$PKG/TubeRipperApp.swift" \
+    -framework Cocoa -framework WebKit -o "$BUILD/tr-x86_64"
+lipo -create "$BUILD/tr-arm64" "$BUILD/tr-x86_64" -o "$MACOS/TubeRipper"
+chmod +x "$MACOS/TubeRipper"
+say "main executable arch: $(lipo -archs "$MACOS/TubeRipper")"
 
 # ---- 6. ad-hoc codesign (helps Gatekeeper; no Developer ID needed) ----
 if command -v codesign >/dev/null 2>&1; then

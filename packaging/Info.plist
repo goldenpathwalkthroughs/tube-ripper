@@ -10,9 +10,13 @@
   <key>CFBundlePackageType</key>      <string>APPL</string>
   <key>CFBundleExecutable</key>       <string>TubeRipper</string>
   <key>CFBundleIconFile</key>         <string>app.icns</string>
-  <key>LSMinimumSystemVersion</key>   <string>10.15</string>
-  <!-- Agent app: no Dock icon. The browser tab is the UI; QUIT button stops it. -->
-  <key>LSUIElement</key>             <true/>
+  <key>LSMinimumSystemVersion</key>   <string>11.0</string>
   <key>NSHighResolutionCapable</key>  <true/>
+  <!-- The UI is served from the bundled server on 127.0.0.1 (plain HTTP) and
+       shown in a WKWebView; allow local networking so it can load. -->
+  <key>NSAppTransportSecurity</key>
+  <dict>
+    <key>NSAllowsLocalNetworking</key><true/>
+  </dict>
 </dict>
 </plist>
