@@ -51,18 +51,18 @@ and [packaging/build_app.sh](packaging/build_app.sh) for how the bundle is built
 
 ### Shipping updates
 
-Installed apps check an "appcast" on launch and can install code updates
-(changes to `server.py` / `index.html`) in place — one click, auto-restart, no
-reinstall. To cut a release:
+Installed apps check the `appcast.json` in this repo on launch and can install
+code updates (changes to `server.py` / `index.html`) in place — one click,
+auto-restart, no reinstall. Publishing is git-only (no `gh`/tokens):
 
 ```bash
-export TR_RELEASE_BASEURL="https://github.com/<you>/<repo>/releases/download/v1.1.0"
 packaging/release.sh 1.1.0 "What changed…"
+git add -A && git commit -m "release v1.1.0" && git push
 ```
 
-Upload the resulting `dist/release/tuberipper-1.1.0.zip` and publish
-`appcast.json` at your update URL. Full details — including how to point apps at
-your appcast and how to ship major (binary) updates — are in
+`release.sh` stamps the version, builds `releases/tuberipper-1.1.0.zip`, and
+rewrites `appcast.json` to point at it. The push publishes it. Full details —
+including the rare "major update" path for new bundled binaries — are in
 [packaging/UPDATES.md](packaging/UPDATES.md).
 
 ## Or run from source

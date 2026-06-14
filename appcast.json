@@ -1,0 +1,9 @@
+{
+  "version": "1.0.0",
+  "published": "2026-06-14",
+  "notes": "First public build \u2014 universal macOS app: YouTube + Shorts, playlists/channels, MP3, quality presets, choose-folder, self-update, one-click yt-dlp refresh. TikTok/Instagram/Facebook experimental.",
+  "code_url": "https://raw.githubusercontent.com/goldenpathwalkthroughs/tube-ripper/main/releases/tuberipper-1.0.0.zip",
+  "code_sha256": "2ec9aa5bdf62a79b6920b7cdb811b4a4e916a7d1192af2d2cf25ba2eb75ebbbc",
+  "requires_full": false,
+  "full_url": "https://github.com/goldenpathwalkthroughs/tube-ripper/releases/latest"
+}

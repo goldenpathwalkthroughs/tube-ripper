@@ -1,56 +1,47 @@
 # Shipping updates to TUBE-RIPPER
 
-Installed apps check a small JSON **appcast** on launch, and can install
-**code updates** (changes to `server.py` / `index.html`) in place — download,
-SHA-256 verify, swap, auto-restart. No reinstall needed for the common case.
+Installed apps check an **appcast** (`appcast.json` in this repo, served over its
+public raw URL) on launch. For the common case — changes to `server.py` /
+`index.html` — they download a small payload, SHA-256 verify it, swap it in, and
+restart. No reinstall, and **no `gh` / tokens / Release uploads** — just git.
 
-## One-time setup
-
-Pick where the appcast lives and point the apps at it. Two easy options:
-
-- **GitHub (recommended):** keep `appcast.json` in a repo and use its raw URL,
-  e.g. `https://raw.githubusercontent.com/<you>/<repo>/main/appcast.json`.
-  Upload payload zips as Release assets.
-- **Any web host / file server** on your LAN that serves the JSON + zip.
-
-Tell the apps the URL in any one of these (highest priority first):
-1. `TR_UPDATE_URL` environment variable
-2. `~/Library/Application Support/TubeRipper/update_url.txt` (one line) — set this
-   per-machine *without* rebuilding
-3. bake it into `DEFAULT_UPDATE_URL` in `server.py` before building the app
-
-Use an `https://` URL in production. The payload is integrity-checked against the
-`code_sha256` in the manifest, and the updater only ever overwrites `server.py`
-and `index.html`.
+The apps are already pointed at:
+`https://raw.githubusercontent.com/goldenpathwalkthroughs/tube-ripper/main/appcast.json`
+(baked into `DEFAULT_UPDATE_URL` in `server.py`).
 
 ## Cutting a normal update (features / bug fixes)
 
 ```bash
 # edit server.py / index.html, then:
-export TR_RELEASE_BASEURL="https://github.com/<you>/<repo>/releases/download/v1.1.0"
 packaging/release.sh 1.1.0 "Added subtitle download; fixed playlist ordering."
+git add -A && git commit -m "release v1.1.0" && git push
 ```
 
-This stamps `VERSION` into `server.py`, builds `dist/release/tuberipper-1.1.0.zip`,
-and writes `dist/release/appcast.json`. Then:
+`release.sh` stamps `VERSION` into `server.py`, builds
+`releases/tuberipper-1.1.0.zip`, and writes `appcast.json` pointing at that
+payload's raw URL. The commit + push publishes it. Next time each app launches
+(or someone clicks **check for updates**), it offers v1.1.0 and installs it with
+one click, then restarts itself.
 
-1. Upload `tuberipper-1.1.0.zip` to your download host.
-2. Publish `appcast.json` at your appcast URL.
+That's the whole loop: **edit → `release.sh` → commit → push.**
 
-Next time each app launches (or when someone clicks **check for updates**), it
-offers v1.1.0 and installs it with one click, then restarts itself.
+## YouTube broke but you didn't change anything
 
-## Cutting a major update (new Python / yt-dlp / ffmpeg, or big changes)
+Don't release. Tell people to click **refresh engine** in the footer — it runs
+`pip install -U yt-dlp` into the app and fixes most site breakage in seconds.
 
-When the bundled binaries change, a code swap isn't enough:
+## Major update (new bundled Python / ffmpeg)
 
-1. Bump versions in `build_app.sh` if needed, then `packaging/build_app.sh`.
-2. Upload the new `dist/TubeRipper-macOS.zip` to your host.
-3. In `appcast.json` set `"requires_full": true` and point `full_url` at that zip.
+A code swap can't replace binaries, and the 128 MB app zip is too big for git:
 
-Apps then show a **“download new version”** prompt instead of auto-installing, and
-the user replaces the app in Applications (the friendly `Open Me First.command`
-ships in the zip).
+1. Bump versions in `build_app.sh` if needed → `packaging/build_app.sh`.
+2. Create a GitHub Release and attach `dist/TubeRipper-macOS.zip` to it
+   (web drag-and-drop, or `gh release create` if you log in).
+3. In `appcast.json` set `"requires_full": true` and point `full_url` at it.
+
+Apps then show a **“download new version”** prompt instead of auto-installing,
+and people re-drag the app to Applications (the `Open Me First.command` ships in
+the zip). This is rare.
 
 ## appcast.json reference
 
@@ -59,10 +50,10 @@ ships in the zip).
   "version": "1.1.0",
   "published": "2026-06-20",
   "notes": "What changed…",
-  "code_url": "https://…/tuberipper-1.1.0.zip",
+  "code_url": "https://raw.githubusercontent.com/.../releases/tuberipper-1.1.0.zip",
   "code_sha256": "<sha256 of the zip>",
   "requires_full": false,
-  "full_url": "https://…/TubeRipper-macOS.zip"
+  "full_url": "https://github.com/goldenpathwalkthroughs/tube-ripper/releases/latest"
 }
 ```
 

@@ -114,7 +114,7 @@ except OSError:
 #  ~/Library/Application Support/TubeRipper/update_url.txt, or bake it into
 #  DEFAULT_UPDATE_URL below before building. Use an https:// URL in production.
 # --------------------------------------------------------------------------- #
-DEFAULT_UPDATE_URL = ""   # e.g. https://raw.githubusercontent.com/<you>/<repo>/main/appcast.json
+DEFAULT_UPDATE_URL = "https://raw.githubusercontent.com/goldenpathwalkthroughs/tube-ripper/main/appcast.json"
 RESTART_EXIT_CODE = 42
 UPDATE_FILES = ("server.py", "index.html")   # only these are ever overwritten
 
