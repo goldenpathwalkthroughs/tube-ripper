@@ -339,8 +339,9 @@ def tailscale_ip():
     """A Tailscale (100.64.0.0/10 CGNAT) address on this machine, if any —
     lets the phone reach the tool privately from anywhere, no public exposure."""
     net = ipaddress.ip_network("100.64.0.0/10")
+    ifconfig = "/sbin/ifconfig" if os.path.exists("/sbin/ifconfig") else "ifconfig"
     try:
-        out = subprocess.run(["ifconfig"], capture_output=True, text=True, timeout=5).stdout
+        out = subprocess.run([ifconfig], capture_output=True, text=True, timeout=5).stdout
         for line in out.splitlines():
             line = line.strip()
             if line.startswith("inet "):
@@ -358,8 +359,9 @@ def tailscale_ip():
 def local_hostname():
     """The Mac's stable Bonjour name, e.g. 'macbook-pro.local' — resolvable by
     other Apple devices on the same network without knowing the IP."""
+    scutil = "/usr/sbin/scutil" if os.path.exists("/usr/sbin/scutil") else "scutil"
     try:
-        n = subprocess.run(["scutil", "--get", "LocalHostName"],
+        n = subprocess.run([scutil, "--get", "LocalHostName"],
                         capture_output=True, text=True, timeout=4).stdout.strip()
         if n:
             return n + ".local"
