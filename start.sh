@@ -15,7 +15,7 @@ fi
 if ! command -v yt-dlp >/dev/null 2>&1 && ! python3 -c "import yt_dlp" >/dev/null 2>&1; then
   echo ">> yt-dlp not found — installing into ./.venv ..."
   python3 -m venv .venv
-  ./.venv/bin/pip install --quiet --upgrade pip yt-dlp segno
+  ./.venv/bin/pip install --quiet --upgrade pip yt-dlp
   PY="./.venv/bin/python3"
 elif [ -x "./.venv/bin/python3" ]; then
   PY="./.venv/bin/python3"

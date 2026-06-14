@@ -286,12 +286,6 @@
   .updatebar .ub-notes{font-size:11px;color:#e7dcff;margin:5px 0 9px;white-space:pre-wrap;line-height:1.5}
   .updatebar .ub-actions{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
 
-  /* ---- phone / QR ---- */
-  .qrcard{background:#fff;display:inline-block;padding:10px;border-radius:8px;
-    box-shadow:0 0 16px rgba(0,255,213,.4)}
-  #phonebody svg{width:210px;height:210px;display:block}
-  .qrurl{font-size:11px;color:var(--neon);word-break:break-all;margin-top:7px;text-shadow:0 0 5px var(--neon)}
-
   /* ---- FAQ accordion (expandable) ---- */
   .faq details{border:2px solid #000;border-radius:4px;margin:8px 0;
     background:linear-gradient(180deg,#22103a,#14071f);
@@ -509,9 +503,12 @@
 
         <details>
           <summary>Can I use it from my phone or another computer?</summary>
-          <div class="ans">Yes, on the same home Wi-Fi. While the app is running it shows a
-          <b>http://192.168.x.x:1337/?key=…</b> address — open that on any device. It's locked to your local
-          network and a secret key, so the public internet can't reach it.</div>
+          <div class="ans">Yes. Click <b>📱 USE ON PHONE</b> — it shows a stable web address like
+          <b>macbook-pro.local:1337</b> and a 6-digit <b>PIN</b>. On the same Wi-Fi, open that address in your
+          phone's browser, enter the PIN once, and bookmark it — the device stays signed in.
+          It's locked to your local network, so the public internet can't reach it. To use it
+          <b>away from home</b> privately, install <a class="lnk" href="https://tailscale.com/download" target="_blank" rel="noopener">Tailscale</a>
+          (free) on the Mac and phone — the app shows a Tailscale address too. Keep the Mac running TUBE-RIPPER while you use it.</div>
         </details>
 
         <details>
@@ -588,10 +585,10 @@ function beep(freq=660,dur=.06,type="square"){
 const $=s=>document.querySelector(s);
 let STATE={url:"",sel:null,poll:null};
 
-/* access key — injected by the server into window.ACCESS_TOKEN, or taken from
-   the ?key= in this page's own URL. Appended to every API request. */
-const KEY = (window.ACCESS_TOKEN) || new URLSearchParams(location.search).get("key") || "";
-const api = p => p + (p.includes("?") ? "&" : "?") + "key=" + encodeURIComponent(KEY);
+/* Auth is handled by the server: the Mac itself (loopback) is trusted, and
+   other devices carry a session cookie set after the one-time PIN login — so
+   API calls just go same-origin with no key in the URL. */
+const api = p => p;
 
 /* ===== auto-detect the browser this page is open in =====
    Pre-selects the SESSION COOKIES menu so HD/4K works out of the box. The
@@ -980,25 +977,27 @@ function pollJob(id){
 
 $("#openfolder").onclick=()=>{beep(880);fetch(api("/api/open?dir="+encodeURIComponent($("#dest").value.trim())));};
 
-/* ===== use on phone (QR for LAN / Tailscale) ===== */
-function qrBlock(x){
-  const qr = x.qr ? `<div class="qrcard">${x.qr}</div>` : "";
-  return `<div style="text-align:center;margin:6px 0 4px">${qr}<div class="qrurl">${x.url.replace(/</g,"&lt;")}</div></div>`;
+/* ===== use on phone (stable hostname + one-time PIN) ===== */
+function addrRow(label, addr){
+  return `<div style="margin:8px 0"><span style="color:#9a7ac0">${label}</span><br>`+
+    `<span style="font-size:16px;color:var(--neon);text-shadow:0 0 6px var(--neon);word-break:break-all">${addr}</span></div>`;
 }
 $("#phonebtn").onclick=async()=>{
   beep(880);
   const panel=$("#phonepanel"), body=$("#phonebody");
   if(panel.style.display!=="none"){ panel.style.display="none"; return; }
-  body.innerHTML="<div style='color:#9a7ac0'>building secure link…</div>";
+  body.innerHTML="<div style='color:#9a7ac0'>checking the network…</div>";
   panel.style.display="block";
-  let d; try{ d=await(await fetch(api("/api/share"))).json(); }catch(e){ body.innerHTML="couldn't build link"; return; }
-  let h="";
-  if(d.lan){ h+=`<div><b style="color:var(--gold)">On the same Wi-Fi</b> — point your phone camera at this:</div>${qrBlock(d.lan)}`; }
-  if(d.tailscale){ h+=`<div style="margin-top:14px"><b style="color:var(--gold)">Anywhere, privately (Tailscale)</b> — scan to use it off your home network:</div>${qrBlock(d.tailscale)}`; }
-  if(!d.lan && !d.tailscale){ h+="<div>No network connection found — connect to Wi-Fi and try again.</div>"; }
-  if(!d.have_qr){ h+='<div style="color:var(--yt);font-size:11px">(QR engine missing — open the URL above on your phone manually)</div>'; }
-  h+=`<div style="font-size:11px;color:#9a7ac0;margin-top:12px;line-height:1.6">▒ Keep this Mac running TUBE-RIPPER while you use the phone. It's private to your network — <b>not</b> a public website, and the internet can't reach it. After a rip, tap <b>SAVE TO THIS DEVICE</b> to pull the video onto your phone.`;
-  if(!d.tailscale){ h+=` &nbsp;Want to use it away from home? Install <a class="lnk" href="https://tailscale.com/download" target="_blank" rel="noopener">Tailscale</a> (free) on this Mac and your phone — a private link with nothing exposed publicly.`; }
+  let d; try{ d=await(await fetch(api("/api/share"))).json(); }catch(e){ body.innerHTML="couldn't read network info"; return; }
+  let h=`<div style="margin-bottom:6px">On your phone (same Wi-Fi), open this in any browser:</div>`;
+  if(d.host) h+=addrRow("▸ web address", d.host);
+  if(d.ip)   h+=addrRow(d.host?"▸ or, if the name won't load":"▸ web address", d.ip);
+  if(d.tailscale) h+=addrRow("▸ away from home (Tailscale)", d.tailscale);
+  h+=`<div style="margin:14px 0 4px;font-size:13px">then enter this PIN once:</div>`+
+     `<div style="font-family:Impact,sans-serif;font-size:38px;letter-spacing:8px;color:var(--gold);`+
+     `text-shadow:0 0 16px var(--gold)">${d.pin}</div>`;
+  h+=`<div style="font-size:11px;color:#9a7ac0;margin-top:14px;line-height:1.6">▒ Your phone stays signed in after that — just bookmark the address. Keep this Mac running TUBE-RIPPER while you use it. It's private to your network — <b>not</b> a public website, and the internet can't reach it. After a rip, tap <b>SAVE TO THIS DEVICE</b> to pull the video onto your phone.`;
+  if(!d.tailscale) h+=` &nbsp;To use it away from home, install <a class="lnk" href="https://tailscale.com/download" target="_blank" rel="noopener">Tailscale</a> (free) on this Mac and your phone — a private connection, nothing public.`;
   h+=" ▒</div>";
   body.innerHTML=h;
   panel.scrollIntoView({behavior:"smooth",block:"nearest"});

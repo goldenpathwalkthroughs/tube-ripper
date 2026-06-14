@@ -33,6 +33,7 @@ import time
 import urllib.request
 import uuid
 import zipfile
+from http.cookies import SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs, quote
 
@@ -53,11 +54,6 @@ if APP_MODE:
         SUPPORT_DIR = HERE
 else:
     SUPPORT_DIR = HERE
-
-try:
-    import segno  # zero-dependency QR generator (bundled); optional
-except Exception:
-    segno = None
 
 HTTPD = None       # set in main(); used by /api/quit
 BOUND_PORT = None  # set in main(); used to build phone URLs
@@ -254,38 +250,54 @@ def apply_code_update():
         shutil.rmtree(tmp, ignore_errors=True)
 
 # --------------------------------------------------------------------------- #
-#  Access control — two independent gates so this is safe on a LAN:
+#  Access control — two layers so this is safe on a LAN:
 #    1. the source IP must be loopback / private (RFC1918) / CGNAT-Tailscale.
 #       The public internet is rejected outright, even if a router ever
 #       forwarded the port.
-#    2. a secret key (?key= or X-Access-Token header) must match. The key is
-#       generated once and stored in .access_token next to this file.
+#    2. the local machine (loopback) is trusted automatically; any other device
+#       logs in once with a short PIN, then carries a session cookie (the long
+#       ACCESS_TOKEN). Clean URL, remembered per device — no key in the URL.
 # --------------------------------------------------------------------------- #
 TOKEN_FILE = os.path.join(SUPPORT_DIR, ".access_token")
+PIN_FILE = os.path.join(SUPPORT_DIR, ".pin")
+SESSION_COOKIE = "tr_auth"
+
+
+def _load_or_make(path, factory):
+    try:
+        with open(path) as fh:
+            v = fh.read().strip()
+            if v:
+                return v
+    except FileNotFoundError:
+        pass
+    v = factory()
+    try:
+        with open(path, "w") as fh:
+            fh.write(v)
+        os.chmod(path, 0o600)
+    except OSError:
+        pass
+    return v
 
 
 def load_token():
     env = os.environ.get("ACCESS_TOKEN")
     if env:
         return env.strip()
-    try:
-        with open(TOKEN_FILE) as fh:
-            t = fh.read().strip()
-            if t:
-                return t
-    except FileNotFoundError:
-        pass
-    t = secrets.token_urlsafe(15)
-    try:
-        with open(TOKEN_FILE, "w") as fh:
-            fh.write(t)
-        os.chmod(TOKEN_FILE, 0o600)
-    except OSError:
-        pass
-    return t
+    return _load_or_make(TOKEN_FILE, lambda: secrets.token_urlsafe(24))
+
+
+def load_pin():
+    env = os.environ.get("TR_PIN")
+    if env:
+        return env.strip()
+    # 6 digits — easy to type on a phone's numeric keypad
+    return _load_or_make(PIN_FILE, lambda: f"{secrets.randbelow(900000) + 100000}")
 
 
 ACCESS_TOKEN = load_token()
+PIN = load_pin()
 
 # Source ranges allowed to reach the server. Loopback + the three RFC1918
 # private blocks + link-local + the 100.64/10 CGNAT block (Tailscale / VPNs).
@@ -338,15 +350,19 @@ def tailscale_ip():
     return ""
 
 
-def qr_svg(data, dark="#000000", light="#ffffff"):
-    """Return an inline SVG QR for `data`, or "" if segno isn't available."""
-    if segno is None:
-        return ""
+def local_hostname():
+    """The Mac's stable Bonjour name, e.g. 'macbook-pro.local' — resolvable by
+    other Apple devices on the same network without knowing the IP."""
     try:
-        buf = io.BytesIO()
-        segno.make(data, error="m").save(
-            buf, kind="svg", scale=6, border=2, dark=dark, light=light, xmldecl=False)
-        return buf.getvalue().decode("utf-8")
+        n = subprocess.run(["scutil", "--get", "LocalHostName"],
+                        capture_output=True, text=True, timeout=4).stdout.strip()
+        if n:
+            return n + ".local"
+    except Exception:
+        pass
+    try:
+        h = socket.gethostname()
+        return h if h.endswith(".local") else (h + ".local")
     except Exception:
         return ""
 
@@ -841,6 +857,58 @@ def _set(job_id, **kw):
         JOBS.setdefault(job_id, {}).update(kw)
 
 
+LOGIN_PAGE = """<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>:: TUBE-RIPPER :: SIGN IN ::</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+    font-family:"Lucida Console",monospace;color:#eee;
+    background:radial-gradient(ellipse at 50% -10%,#3a0d63,#11021f 55%,#05010a)}
+  .card{width:90%;max-width:340px;text-align:center;border:2px solid #000;border-radius:8px;
+    padding:26px 22px;background:linear-gradient(180deg,#1f0c33,#160826);
+    box-shadow:0 0 0 2px #4d178a,0 0 26px rgba(255,0,51,.5)}
+  .logo{font-family:Impact,"Arial Black",sans-serif;font-size:26px;letter-spacing:1px;color:#fff;
+    text-shadow:0 0 14px #ff0033;margin-bottom:2px}
+  .sub{color:#00ffd5;font-size:11px;letter-spacing:4px;margin-bottom:20px;text-shadow:0 0 8px #00ffd5}
+  label{display:block;font-size:11px;color:#ffcc00;letter-spacing:2px;margin-bottom:8px}
+  input{width:100%;font-family:inherit;font-size:26px;text-align:center;letter-spacing:10px;
+    color:#39ff14;background:#000;border:2px solid #000;border-radius:4px;padding:12px;
+    box-shadow:inset 0 0 12px rgba(0,0,0,.9),0 0 0 1px #00ffd5;outline:none;text-shadow:0 0 6px #39ff14}
+  button{margin-top:16px;width:100%;cursor:pointer;font-family:Impact,sans-serif;letter-spacing:2px;
+    font-size:18px;color:#fff;border:2px solid #000;border-radius:5px;padding:12px;
+    background:linear-gradient(180deg,#ff4d6a,#ff0033 45%,#990014);
+    box-shadow:inset 0 2px 1px rgba(255,255,255,.6),0 0 14px #ff0033;text-shadow:1px 1px 0 #000}
+  .err{color:#ff0033;font-size:12px;margin-top:12px;min-height:16px;text-shadow:0 0 6px #ff0033}
+  .hint{color:#9a7ac0;font-size:11px;margin-top:14px;line-height:1.5}
+</style></head>
+<body>
+  <form class="card" id="f">
+    <div class="logo">TUBE-RIPPER</div>
+    <div class="sub">D E L U X E &nbsp; 2 0 0 0</div>
+    <label>ENTER PIN</label>
+    <input id="pin" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code"
+        maxlength="6" placeholder="······" autofocus>
+    <button type="submit">UNLOCK</button>
+    <div class="err" id="err"></div>
+    <div class="hint">The 6-digit PIN is shown on the Mac running TUBE-RIPPER
+        (under “USE ON PHONE”). You only enter it once on this device.</div>
+  </form>
+<script>
+  const f=document.getElementById("f"),pin=document.getElementById("pin"),err=document.getElementById("err");
+  f.addEventListener("submit",async e=>{
+    e.preventDefault(); err.textContent="";
+    try{
+      const r=await fetch("/login",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({pin:pin.value.trim()})});
+      const d=await r.json();
+      if(d.ok){ location.replace("/"); } else { err.textContent="✖ "+(d.error||"Wrong PIN"); pin.value=""; pin.focus(); }
+    }catch(_){ err.textContent="✖ connection error"; }
+  });
+</script>
+</body></html>"""
+
+
 # --------------------------------------------------------------------------- #
 #  HTTP handler
 # --------------------------------------------------------------------------- #
@@ -861,30 +929,46 @@ class Handler(BaseHTTPRequestHandler):
         return json.loads(self.rfile.read(n) or b"{}")
 
     # ---- access control ----
+    def _is_loopback(self):
+        a = self.client_address[0]
+        return a == "::1" or a.startswith("127.")
+
     def _supplied_token(self, qs):
         hdr = self.headers.get("X-Access-Token")
         if hdr:
             return hdr.strip()
         return (qs.get("key") or [""])[0]
 
-    def _gate(self, qs):
-        """Return None if the request may proceed, else send a denial and
-        return the reason string."""
-        addr = self.client_address[0]
-        if not ip_allowed(addr):
-            self._deny(403, "FORBIDDEN — this address is outside the allowed "
-                          "local network. The internet cannot reach this tool.")
-            return "ip"
-        # Loopback is this machine's own user — no key needed, so the local URL
-        # can stay clean (http://localhost:PORT). The key still gates LAN access.
-        if addr == "::1" or addr.startswith("127."):
-            return None
-        if not secrets.compare_digest(self._supplied_token(qs), ACCESS_TOKEN):
-            self._deny(401, "ACCESS DENIED — missing or wrong key. Open the "
-                          "exact URL printed in the server terminal "
-                          "(it includes ?key=…).")
-            return "token"
-        return None
+    def _has_session(self):
+        raw = self.headers.get("Cookie")
+        if not raw:
+            return False
+        try:
+            ck = SimpleCookie(raw).get(SESSION_COOKIE)
+            return ck is not None and secrets.compare_digest(ck.value, ACCESS_TOKEN)
+        except Exception:
+            return False
+
+    def _authed(self, qs):
+        """The Mac itself is trusted; other devices need a session cookie (set
+        after the PIN login) or a back-compat ?key= token."""
+        if self._is_loopback() or self._has_session():
+            return True
+        k = self._supplied_token(qs)
+        return bool(k) and secrets.compare_digest(k, ACCESS_TOKEN)
+
+    def _ip_ok(self):
+        if ip_allowed(self.client_address[0]):
+            return True
+        self._deny(403, "FORBIDDEN — this address is outside the allowed local "
+                    "network. The internet cannot reach this tool.")
+        return False
+
+    def _set_session_cookie(self):
+        # one year, the token is the value; HttpOnly so page JS can't read it
+        self.send_header("Set-Cookie",
+            f"{SESSION_COOKIE}={ACCESS_TOKEN}; Max-Age=31536000; Path=/; "
+            "HttpOnly; SameSite=Lax")
 
     def _deny(self, code, msg):
         body = (
@@ -909,8 +993,13 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         path = urlparse(self.path).path
         qs = parse_qs(urlparse(self.path).query)
-        if self._gate(qs):
+        if not self._ip_ok():
             return
+        if not self._authed(qs):
+            # Unknown device: show the PIN login for the page, refuse everything else.
+            if path in ("/", "/index.html"):
+                return self._serve_login()
+            return self._deny(401, "Enter the PIN on this device to use TUBE-RIPPER.")
 
         if path in ("/", "/index.html"):
             return self._serve_index()
@@ -940,18 +1029,20 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/browse":
             return self._json({"path": pick_folder()})
         if path == "/api/share":
-            # URLs + QR codes the phone can scan (same Wi-Fi, and Tailscale if
-            # present). Private to your network — never a public website.
+            # How to reach it from a phone: a stable Bonjour hostname (no IP to
+            # memorise), the IP as a fallback, Tailscale for away-from-home, and
+            # the PIN to log in once. Private to your network — never public.
             port = BOUND_PORT or 1337
-            out = {"have_qr": segno is not None}
+            out = {"pin": PIN, "port": port}
+            host = local_hostname()
+            if host:
+                out["host"] = f"{host}:{port}"
             lan = lan_ip()
             if lan and lan != "127.0.0.1":
-                url = f"http://{lan}:{port}/?key={ACCESS_TOKEN}"
-                out["lan"] = {"url": url, "qr": qr_svg(url)}
+                out["ip"] = f"{lan}:{port}"
             ts = tailscale_ip()
             if ts:
-                url = f"http://{ts}:{port}/?key={ACCESS_TOKEN}"
-                out["tailscale"] = {"url": url, "qr": qr_svg(url)}
+                out["tailscale"] = f"{ts}:{port}"
             return self._json(out)
         if path == "/api/file":
             # Serve a finished single-video file so a phone can save it locally.
@@ -984,12 +1075,30 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         path = urlparse(self.path).path
         qs = parse_qs(urlparse(self.path).query)
-        if self._gate(qs):
+        if not self._ip_ok():
             return
         try:
             body = self._read_body()
         except Exception:
             return self._json({"error": "bad request body"}, 400)
+
+        # The login step itself can't require a session yet.
+        if path == "/login":
+            pin = str(body.get("pin", "")).strip()
+            if pin and secrets.compare_digest(pin, PIN):
+                out = json.dumps({"ok": True}).encode()
+                self.send_response(200)
+                self._set_session_cookie()
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(out)))
+                self.end_headers()
+                self.wfile.write(out)
+            else:
+                self._json({"ok": False, "error": "Wrong PIN."}, 401)
+            return
+
+        if not self._authed(qs):
+            return self._json({"error": "Not authorised — log in with the PIN."}, 401)
 
         if path == "/api/info":
             url = (body.get("url") or "").strip()
@@ -1077,18 +1186,24 @@ class Handler(BaseHTTPRequestHandler):
         fp = os.path.join(HERE, "index.html")
         if not os.path.exists(fp):
             return self.send_error(404)
-        with open(fp, "r", encoding="utf-8") as fh:
-            html = fh.read()
-        # Hand the page its own access key so every API call it makes is
-        # authenticated without the user re-typing it.
-        inject = f'<script>window.ACCESS_TOKEN={json.dumps(ACCESS_TOKEN)};</script>'
-        html = html.replace("</head>", inject + "</head>", 1)
-        data = html.encode("utf-8")
+        with open(fp, "rb") as fh:
+            data = fh.read()
         self.send_response(200)
+        # If a remote device got here (cookie or ?key), make the session stick.
+        if not self._is_loopback():
+            self._set_session_cookie()
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Content-Length", str(len(data)))
         self.end_headers()
         self.wfile.write(data)
+
+    def _serve_login(self):
+        html = LOGIN_PAGE.encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(html)))
+        self.end_headers()
+        self.wfile.write(html)
 
 
 def _looks_like_url(u):
@@ -1145,14 +1260,18 @@ def main():
     HTTPD = server
     BOUND_PORT = port
 
-    key = ACCESS_TOKEN
     lan = lan_ip()
+    host_name = local_hostname()
     print("=" * 64)
     print("  TUBE-RIPPER DELUXE 2000  ::  backend online")
     print(f"  >> this machine : http://localhost:{port}/")
-    if host != "127.0.0.1" and lan != "127.0.0.1":
-        print(f"  >> other devices: http://{lan}:{port}/?key={key}")
-        print(f"     (same Wi-Fi/LAN only — the public internet is blocked)")
+    if host != "127.0.0.1":
+        target = host_name or lan
+        if target and target != "127.0.0.1":
+            print(f"  >> on your phone: http://{target}:{port}/   PIN: {PIN}")
+            if host_name and lan != "127.0.0.1":
+                print(f"     (or http://{lan}:{port}/ if the name won't resolve)")
+            print(f"     same Wi-Fi/LAN only — the public internet is blocked")
     print(f"  >> downloads     : {DEFAULT_DEST}  (changeable in the UI)")
     print(f"  >> yt-dlp: {'OK' if have_ytdlp() else 'MISSING'}"
         f"   ffmpeg: {'OK' if have_ffmpeg() else 'MISSING'}")

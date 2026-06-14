@@ -9,3 +9,4 @@ dist/
 packaging/app.iconset/
 packaging/icon_master.png
 .DS_Store
+.pin
