@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>:: TUBE-RIPPER DELUXE 2000 :: [UNREGISTERED] ::</title>
+<style>
+  /* ===================================================================
+     TUBE-RIPPER DELUXE 2000 — keygen-hell stylesheet
+     YouTube red/white branding, dragged through a 2003 warez crackme.
+     =================================================================== */
+  :root{
+    --yt:#ff0033;          /* tube red */
+    --yt-deep:#990014;
+    --neon:#00ffd5;
+    --neon2:#ff00e6;
+    --gold:#ffcc00;
+    --ink:#05010a;
+    --panel:#160826;
+    --panel2:#1f0c33;
+    --bevel-lt:#7a3bd0;
+    --bevel-dk:#2a0a4a;
+    --green:#39ff14;
+    --mono:"Lucida Console","Courier New",monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    font-family:var(--mono);
+    color:#eee;
+    background:
+      radial-gradient(ellipse at 50% -10%, #3a0d63 0%, #11021f 55%, #05010a 100%);
+    overflow-x:hidden;
+    min-height:100vh;
+  }
+  /* animated tron grid floor */
+  body::before{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:
+      linear-gradient(rgba(255,0,51,.18) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(0,255,213,.12) 1px,transparent 1px);
+    background-size:44px 44px;
+    transform:perspective(420px) rotateX(62deg);
+    transform-origin:top center;
+    top:46%;height:60%;
+    animation:grid 1.6s linear infinite;
+    opacity:.5;
+  }
+  @keyframes grid{from{background-position:0 0}to{background-position:0 44px}}
+  /* CRT scanlines + flicker */
+  body::after{
+    content:"";position:fixed;inset:0;z-index:60;pointer-events:none;
+    background:repeating-linear-gradient(transparent 0 2px,rgba(0,0,0,.18) 2px 4px);
+    mix-blend-mode:multiply;animation:flick .12s steps(2) infinite;
+  }
+  @keyframes flick{0%{opacity:.85}100%{opacity:1}}
+
+  .wrap{position:relative;z-index:2;max-width:880px;margin:18px auto 60px;padding:0 14px}
+
+  /* ---- fake app window ---- */
+  .win{
+    border:2px solid #000;
+    border-radius:6px;
+    background:linear-gradient(180deg,var(--panel2),var(--panel));
+    box-shadow:
+      0 0 0 2px #4d178a,
+      0 0 22px rgba(255,0,51,.5),
+      0 0 60px rgba(124,28,208,.45),
+      inset 0 0 60px rgba(0,0,0,.6);
+  }
+  .titlebar{
+    display:flex;align-items:center;gap:8px;
+    padding:5px 8px;
+    background:
+      linear-gradient(180deg,#ff2b54 0%,var(--yt) 40%,var(--yt-deep) 100%);
+    border-bottom:2px solid #000;
+    text-shadow:0 1px 0 #000;
+    font-weight:bold;letter-spacing:.5px;
+    border-radius:3px 3px 0 0;
+  }
+  .titlebar .dots{display:flex;gap:5px}
+  .dot{width:13px;height:13px;border-radius:2px;border:1px solid #000;
+    background:linear-gradient(#fff,#bbb);box-shadow:inset 1px 1px 0 #fff}
+  .titlebar .ttl{font-size:13px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .titlebar .badge{
+    margin-left:auto;font-size:10px;background:#000;color:var(--gold);
+    border:1px solid var(--gold);padding:1px 6px;border-radius:3px;
+    animation:nag 1s steps(2) infinite}
+  @keyframes nag{50%{color:#000;background:var(--gold)}}
+
+  .body{padding:16px}
+
+  /* ---- chrome logo ---- */
+  .logo{text-align:center;margin:4px 0 10px;line-height:1}
+  .logo .play{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:62px;height:44px;border-radius:12px;
+    background:linear-gradient(180deg,#ff3355,var(--yt-deep));
+    border:2px solid #000;box-shadow:0 0 16px var(--yt),inset 0 2px 2px rgba(255,255,255,.5);
+    vertical-align:middle;margin-right:10px;
+    animation:throb 1.3s ease-in-out infinite;
+  }
+  @keyframes throb{50%{box-shadow:0 0 30px var(--yt),0 0 50px var(--neon2),inset 0 2px 2px rgba(255,255,255,.6)}}
+  .logo .play b{border-style:solid;border-width:11px 0 11px 19px;
+    border-color:transparent transparent transparent #fff;display:block;margin-left:4px}
+  .logo h1{
+    display:inline-block;vertical-align:middle;margin:0;
+    font-size:40px;letter-spacing:2px;font-weight:900;font-family:"Impact","Arial Black",sans-serif;
+    background:linear-gradient(180deg,#fff 0%,#cfcfcf 40%,#7a7a7a 52%,#fff 53%,#9a9a9a 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    -webkit-text-stroke:1.5px #000;
+    text-shadow:0 0 18px rgba(0,255,213,.6);
+    filter:drop-shadow(2px 3px 0 #000);
+  }
+  .logo .sub{font-size:12px;color:var(--neon);letter-spacing:6px;margin-top:2px;
+    text-shadow:0 0 8px var(--neon)}
+
+  /* ---- marquee ---- */
+  .marquee{
+    overflow:hidden;white-space:nowrap;border:1px solid #000;
+    background:#000;color:var(--green);font-size:12px;padding:3px 0;margin:10px 0;
+    box-shadow:inset 0 0 12px rgba(57,255,20,.4)}
+  .marquee span{display:inline-block;padding-left:100%;animation:scroll 18s linear infinite;text-shadow:0 0 6px var(--green)}
+  @keyframes scroll{to{transform:translateX(-100%)}}
+
+  /* ---- panels ---- */
+  .panel{
+    border:2px solid #000;border-radius:4px;margin:12px 0;padding:12px;
+    background:linear-gradient(180deg,#22103a,#14071f);
+    box-shadow:inset 2px 2px 0 var(--bevel-lt),inset -2px -2px 0 var(--bevel-dk);
+  }
+  .panel > .legend{
+    display:inline-block;margin:-22px 0 8px;background:var(--yt);color:#fff;
+    border:1px solid #000;padding:1px 8px;font-size:11px;letter-spacing:1px;
+    box-shadow:0 0 10px var(--yt);text-shadow:0 1px 0 #000}
+
+  label.lbl{display:block;font-size:11px;color:var(--gold);letter-spacing:2px;margin-bottom:5px}
+  .blink{animation:blink 1s steps(2) infinite}
+  @keyframes blink{50%{opacity:.15}}
+
+  .urlrow{display:flex;gap:8px;flex-wrap:wrap}
+  input.field{
+    flex:1;min-width:240px;font-family:var(--mono);font-size:14px;color:var(--green);
+    background:#000;border:2px solid #000;padding:9px 10px;border-radius:3px;
+    box-shadow:inset 2px 2px 4px rgba(0,0,0,.9),0 0 0 1px var(--neon);
+    outline:none;text-shadow:0 0 5px var(--green)}
+  input.field::placeholder{color:#1d6b12}
+  /* dropdown — fully self-styled (the base styles above are input-only, so the
+     native select used to render light-on-light and was unreadable). */
+  select.field{
+    -webkit-appearance:none;appearance:none;cursor:pointer;
+    font-family:var(--mono);font-size:14px;
+    color:#ffffff !important;
+    background-color:#000 !important;
+    border:2px solid #000;border-radius:3px;
+    padding:9px 34px 9px 10px;
+    box-shadow:inset 2px 2px 4px rgba(0,0,0,.9),0 0 0 1px var(--neon);
+    outline:none;text-shadow:0 0 5px var(--neon);
+    background-image:
+      linear-gradient(45deg,transparent 50%,var(--neon) 50%),
+      linear-gradient(135deg,var(--neon) 50%,transparent 50%);
+    background-position:calc(100% - 16px) 54%,calc(100% - 11px) 54%;
+    background-size:5px 5px,5px 5px;background-repeat:no-repeat,no-repeat}
+  select.field option{background-color:#160826;color:#f3ecff;text-shadow:none}
+
+  /* ---- chrome button ---- */
+  .btn{
+    cursor:pointer;font-family:"Impact","Arial Black",sans-serif;letter-spacing:2px;
+    font-size:16px;color:#fff;border:2px solid #000;border-radius:5px;padding:9px 18px;
+    background:linear-gradient(180deg,#ff4d6a 0%,var(--yt) 45%,var(--yt-deep) 100%);
+    box-shadow:inset 0 2px 1px rgba(255,255,255,.6),inset 0 -3px 6px rgba(0,0,0,.5),0 0 14px var(--yt);
+    text-shadow:1px 1px 0 #000;transition:transform .05s,filter .15s;text-transform:uppercase}
+  .btn:hover{filter:brightness(1.15) saturate(1.3)}
+  .btn:active{transform:translateY(2px)}
+  .btn.cyan{background:linear-gradient(180deg,#7dfff0,var(--neon) 45%,#008c77);color:#022;box-shadow:inset 0 2px 1px rgba(255,255,255,.7),0 0 14px var(--neon)}
+  .btn.gold{background:linear-gradient(180deg,#fff0a8,var(--gold) 45%,#a07c00);color:#221c00;box-shadow:inset 0 2px 1px rgba(255,255,255,.7),0 0 14px var(--gold)}
+  .btn:disabled{opacity:.4;cursor:not-allowed;filter:grayscale(.6)}
+
+  /* ---- serial box ---- */
+  .serial{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .serial code{
+    flex:1;min-width:200px;background:#000;color:var(--gold);border:2px inset #553;
+    padding:7px 9px;letter-spacing:3px;font-size:14px;text-shadow:0 0 6px var(--gold);
+    box-shadow:inset 0 0 10px rgba(255,204,0,.25)}
+
+  /* ---- target meta ---- */
+  .meta{display:none;gap:12px;align-items:flex-start;margin-top:6px}
+  .meta img{width:148px;border:2px solid #000;box-shadow:0 0 12px var(--neon2);border-radius:3px}
+  .meta .info{font-size:12px;line-height:1.7;color:#ddd}
+  .meta .info b{color:var(--neon)}
+  .meta .vtitle{font-size:15px;color:#fff;font-weight:bold;text-shadow:0 0 8px var(--yt);margin-bottom:4px}
+
+  /* ---- format list ---- */
+  .formats{display:none}
+  .ftable{width:100%;border-collapse:collapse;font-size:12px;margin-top:4px}
+  .ftable th{background:#000;color:var(--neon);text-align:left;padding:5px 8px;border:1px solid #3a1560;font-size:10px;letter-spacing:1px}
+  .ftable td{padding:4px 8px;border:1px solid #2a1048}
+  .ftable tr.row{cursor:pointer}
+  .ftable tr.row:hover{background:rgba(0,255,213,.1)}
+  .ftable tr.sel{background:linear-gradient(90deg,rgba(255,0,51,.35),rgba(255,0,230,.2));outline:1px solid var(--yt)}
+  .ftable .rad{width:14px;height:14px;border:2px solid var(--neon);border-radius:50%;display:inline-block;vertical-align:middle}
+  .ftable tr.sel .rad{background:radial-gradient(var(--yt) 40%,transparent 45%);box-shadow:0 0 8px var(--yt)}
+  .tag{font-size:9px;padding:0 4px;border:1px solid;border-radius:3px;margin-left:4px;vertical-align:middle}
+  .tag.merge{color:var(--gold);border-color:var(--gold)}
+  .tag.prog{color:var(--green);border-color:var(--green)}
+  .tag.mp3{color:var(--neon2);border-color:var(--neon2)}
+  .ghead{color:var(--gold);font-size:11px;letter-spacing:2px;margin:12px 0 2px;border-bottom:1px dashed #5a2a8a;padding-bottom:3px}
+
+  /* ---- quality presets ---- */
+  .presets{display:none;margin-top:6px}
+  .preset{display:flex;align-items:center;gap:13px;cursor:pointer;
+    border:2px solid #000;border-radius:5px;padding:11px 15px;margin:9px 0;
+    background:linear-gradient(180deg,#2a1247,#160a26);
+    box-shadow:inset 2px 2px 0 var(--bevel-lt),inset -2px -2px 0 var(--bevel-dk);
+    transition:filter .12s,transform .05s}
+  .preset:hover{filter:brightness(1.22)}
+  .preset:active{transform:translateY(1px)}
+  .preset.sel{outline:2px solid var(--yt);
+    background:linear-gradient(90deg,rgba(255,0,51,.4),rgba(255,0,230,.16));
+    box-shadow:0 0 20px var(--yt)}
+  .preset .rad{width:16px;height:16px;border:2px solid var(--neon);border-radius:50%;flex:0 0 auto}
+  .preset.sel .rad{background:radial-gradient(var(--yt) 42%,transparent 46%);box-shadow:0 0 8px var(--yt)}
+  .preset .picon{font-size:24px;flex:0 0 auto;width:28px;text-align:center;
+    filter:drop-shadow(0 0 6px var(--neon2))}
+  .preset .pmain{font-family:"Impact","Arial Black",sans-serif;letter-spacing:1px;
+    font-size:17px;color:#fff;text-shadow:0 0 8px var(--yt)}
+  .preset .psub{font-size:11px;color:var(--neon);margin-top:2px;text-shadow:0 0 5px var(--neon)}
+  .preset.audio .picon{filter:drop-shadow(0 0 6px var(--gold))}
+
+  /* ---- advanced expander ---- */
+  .adv{display:none;margin-top:12px}
+  .advtoggle{cursor:pointer;font-size:11px;color:#9a7ac0;letter-spacing:1px;user-select:none;
+    display:inline-block;padding:2px 0}
+  .advtoggle:hover{color:var(--neon);text-shadow:0 0 6px var(--neon)}
+
+  /* ---- playlist / channel batch ---- */
+  .plmeta{display:none;margin-top:2px}
+  .pllist{max-height:170px;overflow:auto;border:1px solid #2a1048;background:#0a0413;
+    margin:9px 0;padding:6px 10px;font-size:11px;color:#cbb6e6;line-height:1.8;border-radius:3px;
+    box-shadow:inset 0 0 12px rgba(0,0,0,.7)}
+  .pllist .n{color:var(--gold);margin-right:7px}
+  .pllist .d{color:#6a4a8a;float:right}
+  .pllist .more{color:var(--neon2);margin-top:4px}
+  .limrow{display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap}
+  .limfield{flex:0 0 100px;min-width:0;text-align:center}
+
+  /* ---- progress / console ---- */
+  .stage{display:none;margin-top:12px}
+  .bar{
+    height:26px;border:2px solid #000;border-radius:3px;background:#000;overflow:hidden;
+    box-shadow:inset 0 0 10px rgba(0,0,0,.9);position:relative}
+  .bar .fill{
+    height:100%;width:0%;transition:width .25s;
+    background:repeating-linear-gradient(45deg,var(--yt) 0 14px,#ff5577 14px 28px);
+    box-shadow:0 0 18px var(--yt)}
+  .bar .pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-weight:bold;color:#fff;text-shadow:0 0 4px #000,1px 1px 0 #000;font-size:13px}
+  .stat{display:flex;gap:16px;font-size:11px;color:var(--neon);margin:6px 2px;flex-wrap:wrap}
+  .stat b{color:var(--gold)}
+  .console{
+    background:#000;border:2px solid #000;box-shadow:inset 0 0 14px rgba(57,255,20,.25);
+    color:var(--green);font-size:11.5px;line-height:1.5;padding:8px 10px;height:150px;
+    overflow:auto;white-space:pre-wrap;text-shadow:0 0 4px var(--green);border-radius:3px}
+  .console .err{color:var(--yt);text-shadow:0 0 6px var(--yt)}
+  .console .ok{color:var(--gold);text-shadow:0 0 6px var(--gold)}
+
+  .done{display:none;text-align:center;margin-top:12px;padding:14px;border:2px dashed var(--gold);
+    border-radius:5px;background:rgba(255,204,0,.07);box-shadow:0 0 18px rgba(255,204,0,.25)}
+  .done .big{font-family:"Impact",sans-serif;font-size:26px;color:var(--gold);letter-spacing:2px;
+    text-shadow:0 0 14px var(--gold)}
+
+  .footer{text-align:center;font-size:10px;color:#6a4a8a;margin-top:14px;letter-spacing:1px}
+  .footer .greet{color:var(--neon2)}
+  .health{font-size:10px;text-align:center;margin-top:6px;letter-spacing:1px}
+  .health .bad{color:var(--yt)} .health .good{color:var(--green)}
+  a.lnk{color:var(--neon);text-decoration:none;border-bottom:1px dotted var(--neon)}
+
+  .err-banner{display:none;margin-top:10px;padding:8px 10px;border:2px solid var(--yt);
+    background:rgba(255,0,51,.12);color:#ffd2da;font-size:12px;border-radius:3px;
+    box-shadow:0 0 14px rgba(255,0,51,.4)}
+
+  /* ---- update banner ---- */
+  .updatebar{display:none;margin:10px 0;padding:11px 13px;border:2px solid var(--gold);
+    background:rgba(255,204,0,.1);border-radius:4px;box-shadow:0 0 18px rgba(255,204,0,.3)}
+  .updatebar .ub-h{color:var(--gold);font-weight:bold;letter-spacing:1px;text-shadow:0 0 8px var(--gold);font-size:14px}
+  .updatebar .ub-notes{font-size:11px;color:#e7dcff;margin:5px 0 9px;white-space:pre-wrap;line-height:1.5}
+  .updatebar .ub-actions{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+
+  /* ---- FAQ accordion (expandable) ---- */
+  .faq details{border:2px solid #000;border-radius:4px;margin:8px 0;
+    background:linear-gradient(180deg,#22103a,#14071f);
+    box-shadow:inset 2px 2px 0 var(--bevel-lt),inset -2px -2px 0 var(--bevel-dk)}
+  .faq summary{cursor:pointer;padding:10px 13px;color:#fff;font-size:13px;font-weight:bold;
+    letter-spacing:.4px;list-style:none;outline:none;display:flex;align-items:center;gap:9px}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::before{content:"▸";color:var(--neon);font-size:12px}
+  .faq details[open] summary::before{content:"▾"}
+  .faq summary:hover{color:var(--neon);text-shadow:0 0 6px var(--neon)}
+  .faq .ans{padding:0 14px 13px 32px;font-size:12px;color:#cdbbe6;line-height:1.65}
+  .faq .ans b{color:var(--gold)}
+  .faq .ans ul{margin:4px 0 0;padding-left:18px}
+  .faq .ans li{margin:4px 0}
+  .faq details.dont{border-color:#5a1020}
+  .faq details.dont summary{color:#ffd2da}
+  .faq details.dont summary::before{color:var(--yt)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="win">
+    <!-- titlebar -->
+    <div class="titlebar">
+      <div class="dots"><i class="dot"></i><i class="dot"></i><i class="dot"></i></div>
+      <span class="ttl">C:\WAREZ\TUBE-RIPPER_DELUXE_2000.EXE — youtube edition</span>
+      <span class="badge">UNREGISTERED</span>
+    </div>
+
+    <div class="body">
+      <!-- logo -->
+      <div class="logo">
+        <span class="play"><b></b></span>
+        <h1>TUBE&#8209;RIPPER</h1>
+        <div class="sub">D E L U X E &nbsp; 2 0 0 0</div>
+      </div>
+
+      <div class="marquee"><span>
+        ▓▒░ GREETZ TO THE ENTIRE SCENE ░▒▓ &nbsp;&nbsp; *** ALL YOUR VIDEO ARE BELONG TO US ***
+        &nbsp;&nbsp; PASTE A YOUTUBE URL → ANALYZE → SELECT QUALITY → RIP IT &nbsp;&nbsp;
+        ▓▒░ NO CRACKS, NO ADWARE, JUST yt-dlp + ffmpeg ░▒▓ &nbsp;&nbsp; KEEP IT LEGAL, RIP ONLY WHAT YOU MAY ░▒▓
+      </span></div>
+
+      <div id="health" class="health">checking subsystems…</div>
+
+      <!-- self-update banner -->
+      <div id="updatebar" class="updatebar">
+        <div class="ub-h" id="ub-title"></div>
+        <div class="ub-notes" id="ub-notes"></div>
+        <div class="ub-actions" id="ub-actions"></div>
+      </div>
+
+      <!-- STEP 1: URL -->
+      <div class="panel">
+        <span class="legend">STEP 1 · ACQUIRE TARGET</span>
+        <label class="lbl"><span class="blink">▶</span> PASTE TARGET URL</label>
+        <div class="urlrow">
+          <input id="url" class="field" placeholder="Paste a video link — YouTube / Shorts (TikTok · Instagram · Facebook experimental)" autocomplete="off" spellcheck="false"/>
+          <button id="analyze" class="btn cyan">⌖ ANALYZE TARGET</button>
+        </div>
+        <div class="serial">
+          <label class="lbl" style="margin:0">⚿ SESSION COOKIES:</label>
+          <select id="browser" class="field" style="flex:0 1 200px;min-width:160px">
+            <option value="">none (limited quality)</option>
+            <option value="safari">Safari</option>
+            <option value="chrome">Chrome</option>
+            <option value="brave">Brave</option>
+            <option value="firefox">Firefox</option>
+            <option value="edge">Edge</option>
+            <option value="chromium">Chromium</option>
+            <option value="vivaldi">Vivaldi</option>
+            <option value="opera">Opera</option>
+          </select>
+        </div>
+        <div id="cookienote" style="font-size:10px;color:#9a7ac0;margin-top:4px;letter-spacing:.5px">
+          ▒ YouTube now hides HD/4K behind a session. Pick the browser you watch YouTube in to unlock the full quality ladder (reads its cookies locally — nothing leaves your machine). ▒
+        </div>
+        <div class="serial" style="margin-top:10px">
+          <label class="lbl" style="margin:0">💾 SAVE TO:</label>
+          <input id="dest" class="field" style="flex:1;min-width:200px" placeholder="~/Downloads" spellcheck="false" autocomplete="off"/>
+          <button id="browse" class="btn gold" style="font-size:12px;padding:6px 12px">📁 BROWSE…</button>
+        </div>
+        <div id="errbanner" class="err-banner"></div>
+      </div>
+
+      <!-- STEP 2: target meta + quality -->
+      <div class="panel formats" id="fpanel">
+        <span class="legend">STEP 2 · SELECT QUALITY</span>
+
+        <!-- single-video meta -->
+        <div class="meta" id="meta">
+          <img id="thumb" alt=""/>
+          <div class="info">
+            <div class="vtitle" id="vtitle"></div>
+            <div>CHANNEL: <b id="uploader"></b></div>
+            <div>RUNTIME: <b id="duration"></b> &nbsp; VIEWS: <b id="views"></b></div>
+            <div id="platnote" style="font-size:11px;margin-top:3px"></div>
+            <div style="color:var(--gold);margin-top:4px">▒ choose your quality below, agent ▒</div>
+          </div>
+        </div>
+
+        <!-- playlist / channel meta (batch) -->
+        <div class="plmeta" id="plmeta">
+          <div class="vtitle" id="pltitle"></div>
+          <div style="font-size:12px;line-height:1.8">
+            SOURCE: <b id="plkind" style="color:var(--neon2)"></b> &nbsp;·&nbsp;
+            <b id="plcount" style="color:var(--gold)"></b> videos &nbsp;·&nbsp;
+            <b id="pluploader" style="color:var(--neon)"></b>
+          </div>
+          <div class="pllist" id="pllist"></div>
+          <div class="limrow">
+            <label class="lbl" style="margin:0">⛏ MAX VIDEOS:</label>
+            <input id="limit" class="field limfield" type="number" min="1" placeholder="all"/>
+            <span style="font-size:10px;color:#9a7ac0">leave blank to grab the whole list</span>
+          </div>
+          <div style="color:var(--gold);margin-top:8px;font-size:12px">▒ pick one quality — it applies to every video ▒</div>
+        </div>
+
+        <!-- quality presets -->
+        <div class="presets" id="presets"></div>
+
+        <!-- subtle advanced expander (single video only) -->
+        <div class="adv" id="adv">
+          <div class="advtoggle" id="advtoggle">▸ advanced · pick an exact format</div>
+          <div class="advbody" id="advbody" style="display:none">
+            <div class="ghead">► VIDEO STREAMS</div>
+            <table class="ftable"><tbody id="videoRows"></tbody></table>
+            <div class="ghead">► AUDIO-ONLY STREAMS</div>
+            <table class="ftable"><tbody id="audioRows"></tbody></table>
+          </div>
+        </div>
+
+        <div style="margin-top:14px;text-align:center">
+          <button id="rip" class="btn" disabled>⛏ RIP IT ⛏</button>
+        </div>
+      </div>
+
+      <!-- STEP 3: progress -->
+      <div class="panel stage" id="stage">
+        <span class="legend">STEP 3 · EXTRACTION IN PROGRESS</span>
+        <div class="bar"><div class="fill" id="fill"></div><div class="pct" id="pct">0%</div></div>
+        <div class="stat">
+          <span>SPEED: <b id="sp">—</b></span>
+          <span>ETA: <b id="eta">—</b></span>
+          <span>STATUS: <b id="st">init</b></span>
+        </div>
+        <div class="console" id="con"></div>
+
+        <div class="done" id="done">
+          <div class="big">✶ RIP COMPLETE ✶</div>
+          <div style="font-size:12px;color:#ddd;margin:6px 0">Saved to <code id="fname" style="color:var(--gold)"></code></div>
+          <button id="openfolder" class="btn cyan" style="font-size:12px;padding:6px 14px">📂 OPEN DOWNLOADS</button>
+        </div>
+      </div>
+
+      <!-- FAQ -->
+      <div class="panel faq">
+        <span class="legend">FAQ · HOW TO USE</span>
+
+        <details>
+          <summary>How do I download a video?</summary>
+          <div class="ans">Paste the link up top, hit <b>ANALYZE TARGET</b>, choose a quality (or
+          <b>AUDIO ONLY · MP3</b>), then <b>RIP IT</b>. The file saves to the folder shown in
+          <b>SAVE TO</b> — your Downloads folder by default.</div>
+        </details>
+
+        <details>
+          <summary>I'm only getting low quality — where's HD / 4K? (YouTube)</summary>
+          <div class="ans">YouTube hides HD/4K behind a logged-in session. In <b>SESSION COOKIES</b>
+          pick the browser you watch YouTube in (it auto-detects), make sure you're signed in there,
+          and ANALYZE again. It just reuses your existing cookies locally — nothing leaves your Mac.</div>
+        </details>
+
+        <details>
+          <summary>Where do my downloads go? Can I change it?</summary>
+          <div class="ans">Your Mac's <b>Downloads</b> folder by default. Change it in <b>SAVE TO</b> —
+          type a path or click <b>BROWSE…</b>. Playlists and channels get their own subfolder, numbered
+          in order.</div>
+        </details>
+
+        <details>
+          <summary>Can I download a whole playlist or channel?</summary>
+          <div class="ans">Yes, on YouTube. Paste a playlist or channel link and it switches to batch mode:
+          set <b>MAX VIDEOS</b> if you don't want the whole thing, pick one quality, then <b>RIP ALL</b>.</div>
+        </details>
+
+        <details>
+          <summary>Can I get just the audio (MP3)?</summary>
+          <div class="ans">Yes — choose <b>AUDIO ONLY · MP3</b>. It pulls the best audio track and converts it
+          to an MP3.</div>
+        </details>
+
+        <details>
+          <summary>Which sites can I download from?</summary>
+          <div class="ans"><span id="faq-platforms"><b>YouTube</b> (including Shorts) is fully supported. </span>
+          They work for many public links via the underlying engine, but aren't hardened yet — they keep
+          improving through updates.</div>
+        </details>
+
+        <details>
+          <summary>Can I use it from my phone or another computer?</summary>
+          <div class="ans">Yes, on the same home Wi-Fi. While the app is running it shows a
+          <b>http://192.168.x.x:7654/?key=…</b> address — open that on any device. It's locked to your local
+          network and a secret key, so the public internet can't reach it.</div>
+        </details>
+
+        <details>
+          <summary>How do updates work?</summary>
+          <div class="ans">When a new version is available a gold banner appears at the top — one click installs
+          it and the app restarts itself. You can also hit <b>check for updates</b> in the footer.</div>
+        </details>
+
+        <details>
+          <summary>Is this legal and safe?</summary>
+          <div class="ans">It runs 100% locally and only fetches what you ask for. Use it for videos you own,
+          have permission to download, or that are licensed for it (e.g. Creative Commons). Respect each site's
+          Terms of Service and your local copyright law.</div>
+        </details>
+
+        <details class="dont">
+          <summary>What this app does NOT do</summary>
+          <div class="ans">
+            <ul>
+              <li>It won't download <b>DRM-protected or paid</b> content — Netflix, Disney+, Prime, Apple TV+,
+                  Spotify and similar are encrypted and off-limits.</li>
+              <li>It can't grab <b>private, follower-only, or login-required</b> posts unless you supply your own
+                  signed-in browser session — and even then, only what your account can already see.</li>
+              <li>It does <b>not</b> crack paywalls or bypass age/region/access controls beyond your own account.</li>
+              <li>It's <b>not a bulk site-scraper</b> — it downloads the links you give it, not whole websites or
+                  every user on a platform.</li>
+              <li>It never <b>uploads, shares, or posts</b> anything. No account, no cloud — nothing leaves your Mac.</li>
+              <li>It is <b>not affiliated</b> with YouTube, TikTok, Instagram or Facebook.</li>
+            </ul>
+          </div>
+        </details>
+
+        <details>
+          <summary>A download failed — what can I try?</summary>
+          <div class="ans">
+            <ul>
+              <li>Pick your browser in <b>SESSION COOKIES</b> — this fixes most "403 / forbidden / private" errors.</li>
+              <li>Check the link opens normally in a browser.</li>
+              <li>Sites change often (especially YouTube). Click <b>refresh engine</b> in the footer to update
+                  the download engine (yt-dlp) in seconds — this fixes most "it suddenly stopped working" breakage.</li>
+              <li>Live streams still in progress and members-only content generally won't work.</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+
+      <div id="quitwrap" style="display:none;text-align:center;margin-top:14px">
+        <button id="quit" class="btn" style="font-size:13px;padding:7px 16px">⏻ QUIT APP</button>
+      </div>
+
+      <div class="footer">
+        TUBE-RIPPER DELUXE 2000 · <span id="verline"></span> ·
+        powered by <a class="lnk" href="https://github.com/yt-dlp/yt-dlp" target="_blank" rel="noopener">yt-dlp</a> + ffmpeg ·
+        runs 100% local · for content you own or are licensed to download
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== beep (WebAudio) — pure cheese ===== */
+let AC;
+function beep(freq=660,dur=.06,type="square"){
+  try{
+    AC = AC || new (window.AudioContext||window.webkitAudioContext)();
+    const o=AC.createOscillator(),g=AC.createGain();
+    o.type=type;o.frequency.value=freq;o.connect(g);g.connect(AC.destination);
+    g.gain.setValueAtTime(.06,AC.currentTime);
+    g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+dur);
+    o.start();o.stop(AC.currentTime+dur);
+  }catch(e){}
+}
+
+const $=s=>document.querySelector(s);
+let STATE={url:"",sel:null,poll:null};
+
+/* access key — injected by the server into window.ACCESS_TOKEN, or taken from
+   the ?key= in this page's own URL. Appended to every API request. */
+const KEY = (window.ACCESS_TOKEN) || new URLSearchParams(location.search).get("key") || "";
+const api = p => p + (p.includes("?") ? "&" : "?") + "key=" + encodeURIComponent(KEY);
+
+/* ===== auto-detect the browser this page is open in =====
+   Pre-selects the SESSION COOKIES menu so HD/4K works out of the box. The
+   user can still override (e.g. if they're hitting this from another machine
+   and YouTube is logged in to a different browser on the host). */
+async function detectBrowser(){
+  const ua=navigator.userAgent, vnd=navigator.vendor||"";
+  try{ if(navigator.brave && await navigator.brave.isBrave()) return "brave"; }catch(e){}
+  if(/Edg\//.test(ua)) return "edge";
+  if(/OPR\//.test(ua)||/\bOpera\b/.test(ua)) return "opera";
+  if(/Vivaldi/.test(ua)) return "vivaldi";
+  if(/Firefox\//.test(ua)) return "firefox";
+  if(/Chrome\//.test(ua)) return "chrome";          // after edge/opr/vivaldi/brave
+  if(/Safari\//.test(ua) && /Apple/.test(vnd)) return "safari";
+  return "";
+}
+const NAMES={safari:"Safari",chrome:"Chrome",brave:"Brave",firefox:"Firefox",
+  edge:"Edge",chromium:"Chromium",vivaldi:"Vivaldi",opera:"Opera"};
+detectBrowser().then(b=>{
+  const sel=$("#browser");
+  if(b && [...sel.options].some(o=>o.value===b)){
+    sel.value=b;
+    $("#cookienote").innerHTML=
+      `▒ ✓ Auto-detected <b style="color:var(--neon)">${NAMES[b]}</b> — reusing its YouTube session to unlock HD/4K (read locally, nothing leaves your machine). Change it if YouTube is logged in elsewhere. ▒`;
+  }
+});
+
+/* ===== destination folder ===== */
+let HOME="";
+const friendly = p => (HOME && p.indexOf(HOME)===0) ? "~"+p.slice(HOME.length) : p;
+const saveDest = () => { try{ localStorage.setItem("tr_dest",$("#dest").value); }catch(e){} };
+$("#dest").addEventListener("change",saveDest);
+
+/* ===== health check ===== */
+fetch(api("/api/health")).then(r=>r.json()).then(h=>{
+  const yt=h.ytdlp?'<span class="good">yt-dlp ✓</span>':'<span class="bad">yt-dlp ✗ (pip install yt-dlp)</span>';
+  const ff=h.ffmpeg?'<span class="good">ffmpeg ✓</span>':'<span class="bad">ffmpeg ✗</span>';
+  $("#health").innerHTML=`SUBSYSTEMS: ${yt} &nbsp;·&nbsp; ${ff}`;
+  HOME=h.home||"";
+  let saved="";try{saved=localStorage.getItem("tr_dest")||"";}catch(e){}
+  $("#dest").value = saved || friendly(h.default_dest || "~/Downloads");
+  buildVerLine(h.version, h.ytdlp_version, !!h.app);
+  if(h.app){ $("#quitwrap").style.display="block"; setTimeout(()=>checkUpdates(false),1400); }
+  if(h.platforms){
+    const full=h.platforms.filter(p=>p.support==="full").map(p=>p.name);
+    const exp=h.platforms.filter(p=>p.support==="experimental").map(p=>p.name);
+    let s="";
+    if(full.length) s+="<b>"+full.join(", ")+"</b> (including Shorts) is fully supported. ";
+    if(exp.length) s+="<b>"+exp.join(", ")+"</b> are experimental.";
+    const el=$("#faq-platforms"); if(el&&s) el.innerHTML=s;
+  }
+}).catch(()=>{$("#health").textContent="backend offline";});
+
+/* ===== self-update ===== */
+function buildVerLine(ver,ytVer,app){
+  const el=$("#verline");
+  let h = "v"+(ver||"?");
+  if(ytVer) h += ' · engine yt-dlp <b id="ytver">'+ytVer+'</b>';
+  h += ' · <a class="lnk" href="#" id="refreshyt">refresh engine</a>';
+  if(app) h += ' · <a class="lnk" href="#" id="chkupd">check for updates</a>';
+  el.innerHTML = h;
+  $("#refreshyt").onclick=e=>{e.preventDefault();refreshYtdlp(e.target);};
+  if(app){ $("#chkupd").onclick=e=>{e.preventDefault();beep(620,.05);checkUpdates(true);}; }
+}
+
+/* one-click yt-dlp engine refresh (fixes YouTube breakage without a release) */
+async function refreshYtdlp(link){
+  beep(740);
+  const old=link.textContent; link.textContent="refreshing engine…"; link.style.pointerEvents="none";
+  let d;
+  try{ d=await(await fetch(api("/api/ytdlp/refresh"),{method:"POST",headers:{"Content-Type":"application/json"},body:"{}"})).json(); }
+  catch(e){ d={ok:false,error:"network error"}; }
+  link.style.pointerEvents=""; link.textContent=old;
+  if(!d.ok){ showErr("Engine refresh failed: "+(d.error||"unknown")); beep(160,.3,"sawtooth"); return; }
+  const yv=$("#ytver"); if(yv && d.version) yv.textContent=d.version;
+  clrErr();
+  $("#updatebar").style.display="block";
+  $("#ub-title").textContent="✓ Engine refreshed";
+  $("#ub-notes").textContent="yt-dlp is now at "+(d.version||"the latest version")+". This usually fixes YouTube/site breakage.";
+  $("#ub-actions").innerHTML="";
+  [659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.1),i*80));
+}
+
+async function checkUpdates(manual){
+  let d;
+  try{ d=await(await fetch(api("/api/update/check"))).json(); }
+  catch(e){ if(manual) showErr("Couldn't reach the update server."); return; }
+  const bar=$("#updatebar"),acts=$("#ub-actions");
+  if(d.error){ if(manual){bar.style.display="block";$("#ub-title").textContent="Update check unavailable";$("#ub-notes").textContent=d.error;acts.innerHTML="";} return; }
+  if(!d.available){
+    if(manual){ bar.style.display="block"; $("#ub-title").textContent="✓ You're on the latest version (v"+d.current+")"; $("#ub-notes").textContent=""; acts.innerHTML=""; }
+    return;
+  }
+  $("#ub-title").textContent="⬆ Update available — v"+d.latest+(d.published?(" · "+d.published):"");
+  $("#ub-notes").textContent=d.notes||"";
+  acts.innerHTML="";
+  if(d.kind==="full"){
+    const b=document.createElement("button");b.className="btn gold";b.style.cssText="font-size:13px;padding:7px 14px";
+    b.textContent="⬇ DOWNLOAD NEW VERSION";
+    b.onclick=()=>{beep(880); if(d.full_url) window.open(d.full_url,"_blank");};
+    acts.appendChild(b);
+    const n=document.createElement("span");n.style.cssText="font-size:11px;color:#9a7ac0";
+    n.textContent="major update — replace the app in Applications";acts.appendChild(n);
+  }else{
+    const b=document.createElement("button");b.className="btn";b.style.cssText="font-size:13px;padding:7px 16px";
+    b.textContent="⬆ INSTALL UPDATE";b.onclick=()=>applyUpdate(b);acts.appendChild(b);
+  }
+  bar.style.display="block";
+  beep(990,.08);
+}
+
+async function applyUpdate(btn){
+  btn.disabled=true;btn.textContent="⌛ UPDATING…";beep(740);
+  let d;
+  try{ d=await(await fetch(api("/api/update/apply"),{method:"POST",headers:{"Content-Type":"application/json"},body:"{}"})).json(); }
+  catch(e){ d={ok:false,message:"network error"}; }
+  if(!d.ok){ showErr(d.message||"update failed"); btn.disabled=false; btn.textContent="⬆ INSTALL UPDATE"; return; }
+  $("#ub-title").textContent="⟳ Installing… the app is restarting";
+  $("#ub-notes").textContent=d.message||"";
+  $("#ub-actions").innerHTML="";
+  // server exits & the launcher re-execs the new code; poll until it's back.
+  let tries=0;
+  const iv=setInterval(async()=>{
+    tries++;
+    try{
+      const h=await(await fetch(api("/api/health"))).json();
+      if(h&&h.version){ clearInterval(iv);
+        [523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.12),i*90));
+        setTimeout(()=>location.reload(),700); }
+    }catch(e){}
+    if(tries>50){ clearInterval(iv); showErr("App didn't come back — reopen TUBE-RIPPER from Applications."); }
+  },800);
+}
+
+/* ===== quit (app mode) ===== */
+$("#quit").onclick=async()=>{
+  beep(180,.3,"sawtooth");
+  try{ await fetch(api("/api/quit")); }catch(e){}
+  document.body.innerHTML='<div style="font-family:monospace;color:#39ff14;text-align:center;'+
+    'padding:18vh 8vw;text-shadow:0 0 8px #39ff14;background:#05010a;min-height:100vh">'+
+    '<h1 style="color:#ff0033;letter-spacing:3px;text-shadow:0 0 10px #ff0033">▓▒░ SERVER STOPPED ░▒▓</h1>'+
+    '<p>TUBE-RIPPER has shut down. You can close this tab.</p></div>';
+};
+
+/* ===== browse for a folder (native macOS picker) ===== */
+$("#browse").onclick=async()=>{
+  beep(740);
+  const b=$("#browse");b.disabled=true;b.textContent="⌛";
+  try{
+    const d=await(await fetch(api("/api/browse"))).json();
+    if(d.path){ $("#dest").value=friendly(d.path); saveDest(); beep(1046,.1); }
+  }catch(e){}
+  finally{ b.disabled=false; b.textContent="📁 BROWSE…"; }
+};
+
+/* ===== analyze ===== */
+function showErr(msg){const b=$("#errbanner");b.textContent="✖ "+msg;b.style.display="block";beep(160,.2,"sawtooth");}
+function clrErr(){$("#errbanner").style.display="none";}
+
+$("#analyze").onclick=async()=>{
+  const url=$("#url").value.trim();
+  if(!url){showErr("Empty target. Paste a URL first.");return;}
+  clrErr();beep(740);
+  const btn=$("#analyze");btn.disabled=true;btn.textContent="⌛ SCANNING…";
+  STATE.url=url;STATE.sel=null;$("#rip").disabled=true;
+  try{
+    const r=await fetch(api("/api/info"),{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({url,browser:$("#browser").value})});
+    const d=await r.json();
+    if(!r.ok){showErr(d.error||"scan failed");return;}
+    renderInfo(d);
+    beep(1046,.1);
+  }catch(e){showErr("network error talking to backend");}
+  finally{btn.disabled=false;btn.textContent="⌖ ANALYZE TARGET";}
+};
+$("#url").addEventListener("keydown",e=>{if(e.key==="Enter")$("#analyze").click();});
+
+function renderInfo(d){
+  $("#fpanel").style.display="block";
+  STATE.sel=null;$("#rip").disabled=true;
+  $("#presets").innerHTML="";$("#presets").style.display="none";
+  if(d.type==="playlist") renderBatch(d); else renderVideo(d);
+  $("#fpanel").scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+/* ----- helpers to build a preset card ----- */
+function addPreset(cls,icon,main,sub,sel){
+  const el=document.createElement("div");
+  el.className="preset"+(cls?(" "+cls):"");
+  el.innerHTML=`<span class="rad"></span><span class="picon">${icon}</span>
+    <div><div class="pmain">${main}</div><div class="psub">${sub}</div></div>`;
+  el.onclick=()=>selectEl(el,sel);
+  $("#presets").appendChild(el);
+}
+function selectEl(el,sel){
+  beep(990,.05);
+  document.querySelectorAll(".preset.sel,.ftable tr.sel").forEach(x=>x.classList.remove("sel"));
+  el.classList.add("sel");
+  STATE.sel=sel;
+  $("#rip").disabled=false;
+}
+
+/* ----- single video: two presets + MP3 + advanced table ----- */
+function renderVideo(d){
+  $("#meta").style.display="flex";$("#plmeta").style.display="none";
+  $("#rip").textContent="⛏ RIP IT ⛏";
+  $("#vtitle").textContent=d.title;
+  $("#uploader").textContent=d.uploader;
+  $("#duration").textContent=d.duration_h;
+  $("#views").textContent=d.view_count?d.view_count.toLocaleString():"—";
+  if(d.thumbnail){$("#thumb").src=d.thumbnail;$("#thumb").style.display="block";}
+  else $("#thumb").style.display="none";
+
+  const pn=$("#platnote");
+  if(d.support==="experimental"){
+    pn.innerHTML='⚗ <b style="color:var(--neon2)">'+(d.platform||"This site")+'</b> '+
+      '<span style="color:#9a7ac0">— experimental support; if it fails, pick your browser in SESSION COOKIES.</span>';
+  }else if(d.platform){
+    pn.innerHTML='● <b style="color:var(--neon)">'+d.platform+'</b>';
+  }else pn.textContent="";
+
+  if(d.limited && !$("#browser").value){
+    showErr("Only low-res came back — YouTube is gating HD/4K. Pick your browser in the SESSION COOKIES menu above and ANALYZE again.");
+  }
+
+  const P=d.presets||{};
+  if(P.highest)
+    addPreset("","⬆",`HIGHEST · ${P.highest.label}`,
+      `${P.highest.ext} · ~${P.highest.size_h} · auto-merges best audio`,{quality:"highest"});
+  if(P.standard)
+    addPreset("","≈",`STANDARD · ${P.standard.label}`,
+      `${P.standard.ext} · ~${P.standard.size_h} · smaller, plays anywhere`,{quality:"standard"});
+  addPreset("audio","♪","AUDIO ONLY · MP3","best audio stream, extracted to MP3",{quality:"audio"});
+  $("#presets").style.display="block";
+
+  // advanced — exact formats
+  $("#adv").style.display="block";
+  $("#advbody").style.display="none";
+  $("#advtoggle").textContent="▸ advanced · pick an exact format";
+  buildTables(d);
+}
+
+/* ----- playlist / channel batch ----- */
+function renderBatch(d){
+  $("#meta").style.display="none";$("#plmeta").style.display="block";
+  $("#adv").style.display="none";
+  $("#rip").textContent="⛏ RIP ALL ⛏";
+  $("#pltitle").textContent=d.title;
+  $("#plkind").textContent=(d.kind||"playlist").toUpperCase();
+  $("#plcount").textContent=(d.count||d.entries.length)+(d.capped?"+":"");
+  $("#pluploader").textContent=d.uploader;
+  $("#limit").value="";
+  const list=$("#pllist");
+  list.innerHTML=d.entries.map((e,i)=>
+    `<div><span class="n">${i+1}.</span>${e.title.replace(/</g,"&lt;")}<span class="d">${e.duration_h||""}</span></div>`
+  ).join("");
+  if(d.capped) list.innerHTML+=`<div class="more">…and more (showing first ${d.entries.length})</div>`;
+
+  const n=d.count||d.entries.length;
+  addPreset("","⬆","HIGHEST QUALITY",`best available per video · applies to all ${n}`,{quality:"highest",batch:true});
+  addPreset("","≈","STANDARD QUALITY",`up to 1080p per video · applies to all ${n}`,{quality:"standard",batch:true});
+  addPreset("audio","♪","AUDIO ONLY · MP3",`extract every track to MP3 · all ${n}`,{quality:"audio",batch:true});
+  $("#presets").style.display="block";
+}
+
+function buildTables(d){
+  const vb=$("#videoRows");vb.innerHTML="";
+  if(!d.video.length){vb.innerHTML='<tr><td colspan="5" style="color:#888">no video streams</td></tr>';}
+  d.video.forEach(f=>{
+    const merge=!f.progressive;
+    const tag=merge?'<span class="tag merge">+AUDIO MERGE</span>':'<span class="tag prog">PROGRESSIVE</span>';
+    const fps=f.fps?` ${Math.round(f.fps)}fps`:"";
+    const tr=document.createElement("tr");tr.className="row";
+    tr.innerHTML=`<td><span class="rad"></span></td>
+      <td><b style="color:#fff">${f.label}</b>${fps} ${tag}</td>
+      <td>${f.ext}</td><td>${f.vcodec}</td><td>${f.size_h}</td>`;
+    tr.onclick=()=>selectEl(tr,{format_id:f.id,kind:"video",mp3:false});
+    vb.appendChild(tr);
+  });
+  const ab=$("#audioRows");ab.innerHTML="";
+  const mp3tr=document.createElement("tr");mp3tr.className="row";
+  mp3tr.innerHTML=`<td><span class="rad"></span></td>
+    <td><b style="color:#fff">MP3 (best audio, re-encoded)</b> <span class="tag mp3">EXTRACT→MP3</span></td>
+    <td>mp3</td><td>lame</td><td>~</td>`;
+  mp3tr.onclick=()=>selectEl(mp3tr,{format_id:"",kind:"audio",mp3:true});
+  ab.appendChild(mp3tr);
+  d.audio.forEach(f=>{
+    const tr=document.createElement("tr");tr.className="row";
+    tr.innerHTML=`<td><span class="rad"></span></td>
+      <td><b style="color:#fff">${f.label}</b></td>
+      <td>${f.ext}</td><td>${f.acodec}</td><td>${f.size_h}</td>`;
+    tr.onclick=()=>selectEl(tr,{format_id:f.id,kind:"audio",mp3:false});
+    ab.appendChild(tr);
+  });
+}
+
+/* advanced expander toggle */
+$("#advtoggle").onclick=()=>{
+  beep(620,.04);
+  const b=$("#advbody"),open=b.style.display!=="none";
+  b.style.display=open?"none":"block";
+  $("#advtoggle").textContent=(open?"▸":"▾")+" advanced · pick an exact format";
+};
+
+/* ===== rip ===== */
+const log=(msg,cls="")=>{const c=$("#con");
+  c.innerHTML+=`<div class="${cls}">${msg.replace(/</g,"&lt;")}</div>`;c.scrollTop=c.scrollHeight;};
+
+$("#rip").onclick=async()=>{
+  if(!STATE.sel)return;
+  beep(523);beep(659,.1);
+  $("#stage").style.display="block";$("#done").style.display="none";
+  $("#con").innerHTML="";$("#fill").style.width="0%";$("#pct").textContent="0%";
+  $("#rip").disabled=true;
+  const sel=Object.assign({dest:$("#dest").value.trim()},STATE.sel);
+  if(sel.batch){
+    const lim=parseInt($("#limit").value,10);
+    if(lim>0) sel.limit=lim;
+  }
+  log("» initialising extraction core…");
+  log("» bypassing imaginary copy-protection… [OK]","ok");
+  log(sel.batch?("» batch target: "+STATE.url+(sel.limit?(" (first "+sel.limit+")"):" (all)")):("» target: "+STATE.url));
+  try{
+    const r=await fetch(api("/api/download"),{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(Object.assign({url:STATE.url,browser:$("#browser").value},sel))});
+    const d=await r.json();
+    if(!r.ok||!d.job_id){log("✖ "+(d.error||"failed to start"),"err");$("#rip").disabled=false;return;}
+    pollJob(d.job_id);
+  }catch(e){log("✖ network error","err");$("#rip").disabled=false;}
+};
+
+function pollJob(id){
+  let lastLine="";
+  clearInterval(STATE.poll);
+  STATE.poll=setInterval(async()=>{
+    let d;try{d=await(await fetch(api("/api/progress?id="+id))).json();}catch(e){return;}
+    if(typeof d.percent==="number"){$("#fill").style.width=d.percent+"%";$("#pct").textContent=d.percent.toFixed(1)+"%";}
+    $("#sp").textContent=d.speed||"—";
+    $("#eta").textContent=d.eta||"—";
+    $("#st").textContent=(d.batch&&d.total)?`${d.status} · video ${d.item}/${d.total}`:(d.status||"—");
+    if(d.line&&d.line!==lastLine){lastLine=d.line;log("  "+d.line);}
+    if(d.status==="done"){
+      clearInterval(STATE.poll);
+      $("#fill").style.width="100%";$("#pct").textContent="100%";
+      log("✔ "+(d.line||"complete"),"ok");
+      $("#fname").textContent=d.file||"(see downloads folder)";
+      $("#done").style.display="block";
+      $("#rip").disabled=false;
+      // victory arpeggio
+      [523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.12),i*90));
+    }else if(d.status==="error"){
+      clearInterval(STATE.poll);
+      log("✖ ERROR: "+(d.error||"unknown"),"err");
+      $("#st").textContent="ERROR";$("#rip").disabled=false;
+      beep(120,.4,"sawtooth");
+    }
+  },600);
+}
+
+$("#openfolder").onclick=()=>{beep(880);fetch(api("/api/open?dir="+encodeURIComponent($("#dest").value.trim())));};
+</script>
+</body>
+</html>

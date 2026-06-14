@@ -1,0 +1,11 @@
+.venv/
+downloads/
+.access_token
+__pycache__/
+*.pyc
+build/
+dist/
+.claude/
+packaging/app.iconset/
+packaging/icon_master.png
+.DS_Store

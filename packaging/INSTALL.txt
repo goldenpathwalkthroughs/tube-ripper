@@ -1,0 +1,49 @@
+╔══════════════════════════════════════════════════════════╗
+║   TUBE-RIPPER DELUXE 2000  —  install on a Mac             ║
+╚══════════════════════════════════════════════════════════╝
+
+Works on Apple Silicon (M1/M2/M3/M4) AND Intel Macs. Everything is
+bundled — no Python, yt-dlp, ffmpeg or other installs needed.
+
+────────────────────────────────────────────────────────────
+INSTALL (about 30 seconds)
+────────────────────────────────────────────────────────────
+1.  Drag  TubeRipper.app  into your  Applications  folder.
+
+2.  The app isn't from the App Store, so macOS blocks it the first
+    time. To unblock it, just DOUBLE-CLICK:
+
+        "Open Me First.command"
+
+    If macOS warns that it's from an unidentified developer:
+    RIGHT-CLICK it → Open → Open. (You only do this once.)
+
+    That's it — TubeRipper opens in your web browser.
+
+   (Alternative, same effect, if you prefer the app icon:
+    right-click TubeRipper.app → Open → Open. One time only.)
+
+────────────────────────────────────────────────────────────
+USING IT
+────────────────────────────────────────────────────────────
+•  It opens as a page in your browser. Paste a YouTube link,
+   ANALYZE, pick a quality, RIP IT. Files go to your Downloads
+   folder by default (change it in the SAVE TO box).
+
+•  For HD / 4K: the SESSION COOKIES menu auto-picks your browser.
+   Make sure you're signed in to YouTube in that browser.
+
+•  Playlists & channels: paste the playlist/channel link to
+   download many videos at once.
+
+•  To stop it: click the  ⏻ QUIT APP  button on the page.
+
+────────────────────────────────────────────────────────────
+NOTES
+────────────────────────────────────────────────────────────
+•  100% local. Nothing is uploaded anywhere; it only fetches the
+   video from YouTube on your own machine.
+•  Other devices on your home Wi-Fi can use it too: while it's
+   running, the page header / app shows a "http://192.168.x.x …"
+   address you can open from a phone or another computer.
+•  Only download videos you own or are licensed to download.
