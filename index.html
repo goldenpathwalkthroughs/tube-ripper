@@ -286,6 +286,12 @@
   .updatebar .ub-notes{font-size:11px;color:#e7dcff;margin:5px 0 9px;white-space:pre-wrap;line-height:1.5}
   .updatebar .ub-actions{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
 
+  /* ---- phone / QR ---- */
+  .qrcard{background:#fff;display:inline-block;padding:10px;border-radius:8px;
+    box-shadow:0 0 16px rgba(0,255,213,.4)}
+  #phonebody svg{width:210px;height:210px;display:block}
+  .qrurl{font-size:11px;color:var(--neon);word-break:break-all;margin-top:7px;text-shadow:0 0 5px var(--neon)}
+
   /* ---- FAQ accordion (expandable) ---- */
   .faq details{border:2px solid #000;border-radius:4px;margin:8px 0;
     background:linear-gradient(180deg,#22103a,#14071f);
@@ -336,6 +342,14 @@
         <div class="ub-h" id="ub-title"></div>
         <div class="ub-notes" id="ub-notes"></div>
         <div class="ub-actions" id="ub-actions"></div>
+      </div>
+
+      <div style="text-align:center;margin:6px 0">
+        <button id="phonebtn" class="btn cyan" style="font-size:12px;padding:6px 14px">📱 USE ON PHONE</button>
+      </div>
+      <div id="phonepanel" class="panel" style="display:none">
+        <span class="legend">📱 PHONE / OTHER DEVICES</span>
+        <div id="phonebody" style="font-size:12px;color:#cdbbe6;line-height:1.6"></div>
       </div>
 
       <!-- STEP 1: URL -->
@@ -437,7 +451,8 @@
         <div class="done" id="done">
           <div class="big">✶ RIP COMPLETE ✶</div>
           <div style="font-size:12px;color:#ddd;margin:6px 0">Saved to <code id="fname" style="color:var(--gold)"></code></div>
-          <button id="openfolder" class="btn cyan" style="font-size:12px;padding:6px 14px">📂 OPEN DOWNLOADS</button>
+          <a id="savedevice" class="btn gold" style="display:none;font-size:12px;padding:6px 14px;text-decoration:none">⬇ SAVE TO THIS DEVICE</a>
+          <button id="openfolder" class="btn cyan" style="font-size:12px;padding:6px 14px">📂 OPEN ON THIS MAC</button>
         </div>
       </div>
 
@@ -946,6 +961,10 @@ function pollJob(id){
       $("#fill").style.width="100%";$("#pct").textContent="100%";
       log("✔ "+(d.line||"complete"),"ok");
       $("#fname").textContent=d.file||"(see downloads folder)";
+      // single-video downloads can be saved straight to the device viewing this
+      const sd=$("#savedevice");
+      if(d.file && !d.batch){ sd.href=api("/api/file?id="+id); sd.style.display=""; }
+      else { sd.style.display="none"; }
       $("#done").style.display="block";
       $("#rip").disabled=false;
       // victory arpeggio
@@ -960,6 +979,30 @@ function pollJob(id){
 }
 
 $("#openfolder").onclick=()=>{beep(880);fetch(api("/api/open?dir="+encodeURIComponent($("#dest").value.trim())));};
+
+/* ===== use on phone (QR for LAN / Tailscale) ===== */
+function qrBlock(x){
+  const qr = x.qr ? `<div class="qrcard">${x.qr}</div>` : "";
+  return `<div style="text-align:center;margin:6px 0 4px">${qr}<div class="qrurl">${x.url.replace(/</g,"&lt;")}</div></div>`;
+}
+$("#phonebtn").onclick=async()=>{
+  beep(880);
+  const panel=$("#phonepanel"), body=$("#phonebody");
+  if(panel.style.display!=="none"){ panel.style.display="none"; return; }
+  body.innerHTML="<div style='color:#9a7ac0'>building secure link…</div>";
+  panel.style.display="block";
+  let d; try{ d=await(await fetch(api("/api/share"))).json(); }catch(e){ body.innerHTML="couldn't build link"; return; }
+  let h="";
+  if(d.lan){ h+=`<div><b style="color:var(--gold)">On the same Wi-Fi</b> — point your phone camera at this:</div>${qrBlock(d.lan)}`; }
+  if(d.tailscale){ h+=`<div style="margin-top:14px"><b style="color:var(--gold)">Anywhere, privately (Tailscale)</b> — scan to use it off your home network:</div>${qrBlock(d.tailscale)}`; }
+  if(!d.lan && !d.tailscale){ h+="<div>No network connection found — connect to Wi-Fi and try again.</div>"; }
+  if(!d.have_qr){ h+='<div style="color:var(--yt);font-size:11px">(QR engine missing — open the URL above on your phone manually)</div>'; }
+  h+=`<div style="font-size:11px;color:#9a7ac0;margin-top:12px;line-height:1.6">▒ Keep this Mac running TUBE-RIPPER while you use the phone. It's private to your network — <b>not</b> a public website, and the internet can't reach it. After a rip, tap <b>SAVE TO THIS DEVICE</b> to pull the video onto your phone.`;
+  if(!d.tailscale){ h+=` &nbsp;Want to use it away from home? Install <a class="lnk" href="https://tailscale.com/download" target="_blank" rel="noopener">Tailscale</a> (free) on this Mac and your phone — a private link with nothing exposed publicly.`; }
+  h+=" ▒</div>";
+  body.innerHTML=h;
+  panel.scrollIntoView({behavior:"smooth",block:"nearest"});
+};
 </script>
 </body>
 </html>

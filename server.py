@@ -16,6 +16,7 @@ own machine. Files land in ./downloads.
 """
 
 import hashlib
+import io
 import ipaddress
 import json
 import os
@@ -33,7 +34,7 @@ import urllib.request
 import uuid
 import zipfile
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, quote
 
 VERSION = "1.0.0"
 
@@ -53,7 +54,13 @@ if APP_MODE:
 else:
     SUPPORT_DIR = HERE
 
-HTTPD = None  # set in main(); used by /api/quit
+try:
+    import segno  # zero-dependency QR generator (bundled); optional
+except Exception:
+    segno = None
+
+HTTPD = None       # set in main(); used by /api/quit
+BOUND_PORT = None  # set in main(); used to build phone URLs
 
 # Wrapped: launched inside the native Swift window (WKWebView), not a browser.
 WRAPPED = os.environ.get("TR_WRAPPED") == "1"
@@ -309,6 +316,39 @@ def lan_ip():
         return ip
     except Exception:
         return "127.0.0.1"
+
+
+def tailscale_ip():
+    """A Tailscale (100.64.0.0/10 CGNAT) address on this machine, if any —
+    lets the phone reach the tool privately from anywhere, no public exposure."""
+    net = ipaddress.ip_network("100.64.0.0/10")
+    try:
+        out = subprocess.run(["ifconfig"], capture_output=True, text=True, timeout=5).stdout
+        for line in out.splitlines():
+            line = line.strip()
+            if line.startswith("inet "):
+                ip = line.split()[1]
+                try:
+                    if ipaddress.ip_address(ip) in net:
+                        return ip
+                except ValueError:
+                    pass
+    except Exception:
+        pass
+    return ""
+
+
+def qr_svg(data, dark="#000000", light="#ffffff"):
+    """Return an inline SVG QR for `data`, or "" if segno isn't available."""
+    if segno is None:
+        return ""
+    try:
+        buf = io.BytesIO()
+        segno.make(data, error="m").save(
+            buf, kind="svg", scale=6, border=2, dark=dark, light=light, xmldecl=False)
+        return buf.getvalue().decode("utf-8")
+    except Exception:
+        return ""
 
 # job_id -> {"status","percent","speed","eta","line","file","title","error"}
 JOBS = {}
@@ -780,7 +820,8 @@ def run_download(job_id, url, browser, sel):
             line = "RIP COMPLETE. Welcome to the scene."
             name = os.path.basename(final_file) if final_file else None
         _set(job_id, status="done", percent=100, line=line,
-            file=name, done_count=done_count)
+            file=name, file_path=(final_file if not batch else None),
+            done_count=done_count)
     elif batch and not done_count:
         msg = f"No videos downloaded — {plat_name} blocked every item (usually the session gate)."
         if not browser:
@@ -898,6 +939,26 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(job)
         if path == "/api/browse":
             return self._json({"path": pick_folder()})
+        if path == "/api/share":
+            # URLs + QR codes the phone can scan (same Wi-Fi, and Tailscale if
+            # present). Private to your network — never a public website.
+            port = BOUND_PORT or 1337
+            out = {"have_qr": segno is not None}
+            lan = lan_ip()
+            if lan and lan != "127.0.0.1":
+                url = f"http://{lan}:{port}/?key={ACCESS_TOKEN}"
+                out["lan"] = {"url": url, "qr": qr_svg(url)}
+            ts = tailscale_ip()
+            if ts:
+                url = f"http://{ts}:{port}/?key={ACCESS_TOKEN}"
+                out["tailscale"] = {"url": url, "qr": qr_svg(url)}
+            return self._json(out)
+        if path == "/api/file":
+            # Serve a finished single-video file so a phone can save it locally.
+            jid = (qs.get("id") or [""])[0]
+            with JOBS_LOCK:
+                fp = (JOBS.get(jid) or {}).get("file_path")
+            return self._serve_download(fp)
         if path == "/api/fda":
             # open System Settings → Privacy & Security → Full Disk Access
             try:
@@ -986,6 +1047,32 @@ class Handler(BaseHTTPRequestHandler):
 
         self.send_error(404)
 
+    def _serve_download(self, fp):
+        """Stream a downloaded file as an attachment, but only if it really
+        sits inside an allowed destination root (no arbitrary file reads)."""
+        if not fp:
+            return self.send_error(404, "No file for that job.")
+        real = os.path.realpath(fp)
+        if not any(real == r or real.startswith(r + os.sep) for r in ALLOWED_DEST_ROOTS):
+            return self.send_error(403, "Forbidden path.")
+        if not os.path.isfile(real):
+            return self.send_error(404, "File not found.")
+        import mimetypes
+        ctype = mimetypes.guess_type(real)[0] or "application/octet-stream"
+        name = os.path.basename(real)
+        try:
+            size = os.path.getsize(real)
+            self.send_response(200)
+            self.send_header("Content-Type", ctype)
+            self.send_header("Content-Length", str(size))
+            self.send_header("Content-Disposition",
+                            "attachment; filename*=UTF-8''" + quote(name))
+            self.end_headers()
+            with open(real, "rb") as fh:
+                shutil.copyfileobj(fh, self.wfile)
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+
     def _serve_index(self):
         fp = os.path.join(HERE, "index.html")
         if not os.path.exists(fp):
@@ -1054,7 +1141,9 @@ def main():
             continue
     if server is None:
         print("!! could not bind a port in range"); return
+    global BOUND_PORT
     HTTPD = server
+    BOUND_PORT = port
 
     key = ACCESS_TOKEN
     lan = lan_ip()

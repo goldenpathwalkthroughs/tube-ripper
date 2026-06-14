@@ -66,7 +66,7 @@ for pair in "aarch64:arm64" "x86_64:x86_64"; do
   PREFIX=""
   [ "$dst" != "$HOST_ARCH" ] && PREFIX="arch -$dst"   # Rosetta for the other arch
   $PREFIX "$RES/python/$dst/bin/python3" -m pip install --quiet \
-      --no-warn-script-location --upgrade pip yt-dlp
+      --no-warn-script-location --upgrade pip yt-dlp segno
 done
 
 # ---- 2. ffmpeg (per arch) ----
