@@ -78,15 +78,18 @@ for pair in "arm64:darwin-arm64" "x86_64:darwin-x64"; do
   chmod +x "$RES/bin/$dst/ffmpeg"
 done
 
-# ---- 4. icon (generate if missing and Pillow is available) ----
+# ---- 4. icons (generate if missing and Pillow is available) ----
 if [ ! -f "$PKG/app.icns" ] && [ -x "$ROOT/.venv/bin/python3" ]; then
   say "generating app icon"
   "$ROOT/.venv/bin/python3" "$PKG/make_icon.py" || say "icon generation skipped"
 fi
 
-# ---- 5. app code + native launcher (universal2) + plist + icon ----
+# ---- 5. app code + native launcher (universal2) + plist + icons ----
 say "copy app code"
 cp "$ROOT/server.py" "$ROOT/index.html" "$RES/app/"
+for f in favicon.svg apple-touch-icon.png; do
+  [ -f "$ROOT/$f" ] && cp "$ROOT/$f" "$RES/app/$f" || true
+done
 cp "$PKG/Info.plist" "$APP/Contents/Info.plist"
 [ -f "$PKG/app.icns" ] && cp "$PKG/app.icns" "$RES/app.icns" || true
 

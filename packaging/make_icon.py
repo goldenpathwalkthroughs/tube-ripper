@@ -1,21 +1,25 @@
 #!/usr/bin/env python3
 """
-Generate the TUBE-RIPPER app icon: a glowing red YouTube-style play badge on a
-dark neon keygen-grid squircle. Renders a 1024px master, builds a full .iconset,
-and runs `iconutil` to emit packaging/app.icns.
+Generate the TUBE-RIPPER app icon + web icons, themed to match the wordmark:
+a glossy red play button with a teal glow on a deep navy squircle.
+
+Outputs:
+  packaging/app.icns                (macOS app icon, via iconutil)
+  packaging/icon_master.png         (1024 master)
+  apple-touch-icon.png (repo root)  (180px, iOS home-screen bookmark)
 """
 import os
 import subprocess
 import sys
 
-from PIL import Image, ImageChops, ImageDraw, ImageFilter
+from PIL import Image, ImageDraw, ImageFilter
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(HERE)
 S = 1024
 
 
 def vgrad(size, top, bot):
-    """Vertical gradient RGB image."""
     img = Image.new("RGB", (size, size))
     d = ImageDraw.Draw(img)
     for y in range(size):
@@ -36,56 +40,57 @@ def build_master():
     radius = 232
     mask = rounded_mask(S, radius)
 
-    # background gradient (deep purple -> near black)
-    bg = vgrad(S, (60, 14, 102), (9, 2, 22))
+    # deep navy → indigo background (matches the wordmark's dark field)
+    bg = vgrad(S, (34, 22, 66), (8, 5, 22))
     base = Image.new("RGBA", (S, S), (0, 0, 0, 0))
     base.paste(bg, (0, 0), mask)
 
-    # faint keygen grid, clipped to the squircle
-    grid = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-    gd = ImageDraw.Draw(grid)
-    step = 64
-    for x in range(0, S + 1, step):
-        gd.line([(x, 0), (x, S)], fill=(0, 255, 213, 20))
-    for y in range(0, S + 1, step):
-        gd.line([(0, y), (S, y)], fill=(0, 255, 213, 20))
-    grid.putalpha(ImageChops.multiply(grid.split()[3], mask))
-    base = Image.alpha_composite(base, grid)
+    # teal glow pooled behind the button
+    glowt = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+    ImageDraw.Draw(glowt).ellipse([170, 250, S - 170, S - 250], fill=(0, 255, 213, 130))
+    base = Image.alpha_composite(base, glowt.filter(ImageFilter.GaussianBlur(90)))
 
-    # red play badge (rounded rect) with a glow
-    bw, bh, br = 620, 430, 120
+    # red play button geometry
+    bw, bh, br = 600, 430, 116
     bx0, by0 = (S - bw) // 2, (S - bh) // 2
-    badge_mask = Image.new("L", (S, S), 0)
-    ImageDraw.Draw(badge_mask).rounded_rectangle(
-        [bx0, by0, bx0 + bw, by0 + bh], radius=br, fill=255)
-    redgrad = vgrad(S, (255, 64, 96), (188, 0, 32))
-    badge = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-    badge.paste(redgrad, (0, 0), badge_mask)
+    bx1, by1 = bx0 + bw, by0 + bh
 
+    # red glow halo
+    halo = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+    ImageDraw.Draw(halo).rounded_rectangle([bx0, by0, bx1, by1], radius=br, fill=(255, 40, 70, 220))
+    base = Image.alpha_composite(base, halo.filter(ImageFilter.GaussianBlur(40)))
+
+    # the button: red vertical gradient clipped to a rounded rect, dark outline
+    btn = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+    bmask = rounded_mask(S, br)  # not used; build per-rect below
+    bmask = Image.new("L", (S, S), 0)
+    ImageDraw.Draw(bmask).rounded_rectangle([bx0, by0, bx1, by1], radius=br, fill=255)
+    red = vgrad(S, (255, 74, 92), (190, 12, 40))
+    btn.paste(red, (0, 0), bmask)
+
+    bd = ImageDraw.Draw(btn)
+    # glossy top highlight
+    gloss = Image.new("L", (S, S), 0)
+    ImageDraw.Draw(gloss).rounded_rectangle(
+        [bx0 + 26, by0 + 22, bx1 - 26, by0 + bh // 2], radius=br - 30, fill=70)
+    sheen = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+    sheen.putdata([(255, 255, 255, a) for a in gloss.getdata()])
+    btn = Image.alpha_composite(btn, sheen)
+    bd = ImageDraw.Draw(btn)
+    # dark outline for definition
+    bd.rounded_rectangle([bx0, by0, bx1, by1], radius=br, outline=(0, 0, 0, 235), width=10)
     # white play triangle
     cx, cy = S // 2, S // 2
-    tri = [(cx - 78, cy - 120), (cx - 78, cy + 120), (cx + 138, cy)]
-    ImageDraw.Draw(badge).polygon(tri, fill=(255, 255, 255, 255))
+    bd.polygon([(cx - 70, cy - 112), (cx - 70, cy + 112), (cx + 132, cy)], fill=(255, 255, 255, 255))
 
-    # red glow behind the badge
-    glow_src = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-    gmask = Image.new("L", (S, S), 0)
-    ImageDraw.Draw(gmask).rounded_rectangle(
-        [bx0, by0, bx0 + bw, by0 + bh], radius=br, fill=255)
-    glow_src.paste(Image.new("RGBA", (S, S), (255, 30, 70, 255)), (0, 0), gmask)
-    glow = glow_src.filter(ImageFilter.GaussianBlur(46))
+    out = Image.alpha_composite(base, btn)
 
-    out = Image.alpha_composite(base, glow)
-    out = Image.alpha_composite(out, badge)
+    # gentle teal rim glow on the squircle edge
+    rim = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+    ImageDraw.Draw(rim).rounded_rectangle(
+        [8, 8, S - 9, S - 9], radius=radius - 6, outline=(0, 255, 213, 150), width=8)
+    out = Image.alpha_composite(out, rim.filter(ImageFilter.GaussianBlur(12)))
 
-    # neon border with glow
-    bord = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-    ImageDraw.Draw(bord).rounded_rectangle(
-        [7, 7, S - 8, S - 8], radius=radius - 6, outline=(0, 255, 213, 200), width=9)
-    out = Image.alpha_composite(out, bord.filter(ImageFilter.GaussianBlur(11)))
-    out = Image.alpha_composite(out, bord)
-
-    # clip everything to the squircle
     final = Image.new("RGBA", (S, S), (0, 0, 0, 0))
     final.paste(out, (0, 0), mask)
     return final
@@ -95,22 +100,36 @@ def main():
     master = build_master()
     master.save(os.path.join(HERE, "icon_master.png"))
 
+    # iOS home-screen bookmark icon
+    master.resize((180, 180), Image.LANCZOS).save(os.path.join(ROOT, "apple-touch-icon.png"))
+
+    # crisp vector favicon for the browser tab + bookmarks
+    favicon = (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
+        '<rect width="64" height="64" rx="14" fill="#0a0518"/>'
+        '<ellipse cx="32" cy="33" rx="22" ry="14" fill="#00ffd5" opacity="0.28"/>'
+        '<rect x="12" y="20" width="40" height="26" rx="8" fill="#ff2b46" '
+        'stroke="#000" stroke-width="2.5"/>'
+        '<path d="M28 27 L28 41 L41 34 Z" fill="#fff"/></svg>'
+    )
+    with open(os.path.join(ROOT, "favicon.svg"), "w") as fh:
+        fh.write(favicon)
+
+    # macOS .icns
     iconset = os.path.join(HERE, "app.iconset")
     os.makedirs(iconset, exist_ok=True)
-    specs = [(16, 1), (16, 2), (32, 1), (32, 2), (128, 1),
-            (128, 2), (256, 1), (256, 2), (512, 1), (512, 2)]
-    for size, scale in specs:
+    for size, scale in [(16, 1), (16, 2), (32, 1), (32, 2), (128, 1),
+                        (128, 2), (256, 1), (256, 2), (512, 1), (512, 2)]:
         px = size * scale
-        img = master.resize((px, px), Image.LANCZOS)
         suffix = "" if scale == 1 else "@2x"
-        img.save(os.path.join(iconset, f"icon_{size}x{size}{suffix}.png"))
-
-    icns = os.path.join(HERE, "app.icns")
+        master.resize((px, px), Image.LANCZOS).save(
+            os.path.join(iconset, f"icon_{size}x{size}{suffix}.png"))
     try:
-        subprocess.run(["iconutil", "-c", "icns", iconset, "-o", icns], check=True)
-        print(f"wrote {icns}")
+        subprocess.run(["iconutil", "-c", "icns", iconset,
+                        "-o", os.path.join(HERE, "app.icns")], check=True)
+        print("wrote app.icns + apple-touch-icon.png")
     except (subprocess.CalledProcessError, FileNotFoundError) as e:
-        print(f"iconutil failed ({e}); leaving PNGs in {iconset}", file=sys.stderr)
+        print(f"iconutil failed ({e})", file=sys.stderr)
         sys.exit(1)
 
 

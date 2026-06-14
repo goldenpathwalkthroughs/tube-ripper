@@ -122,7 +122,9 @@ except OSError:
 # --------------------------------------------------------------------------- #
 DEFAULT_UPDATE_URL = "https://raw.githubusercontent.com/goldenpathwalkthroughs/tube-ripper/main/appcast.json"
 RESTART_EXIT_CODE = 42
-UPDATE_FILES = ("server.py", "index.html")   # only these are ever overwritten
+UPDATE_REQUIRED = ("server.py", "index.html")          # must be in every payload
+UPDATE_OPTIONAL = ("favicon.svg", "apple-touch-icon.png")  # shipped if present
+UPDATE_FILES = UPDATE_REQUIRED + UPDATE_OPTIONAL        # all files we may overwrite
 
 
 def update_url():
@@ -216,9 +218,12 @@ def apply_code_update():
         staged = {}
         with zipfile.ZipFile(zpath) as zf:
             names = set(zf.namelist())
-            for fname in UPDATE_FILES:
+            for fname in UPDATE_REQUIRED:
                 if fname not in names:
                     return False, f"Update payload is missing {fname}."
+            for fname in UPDATE_FILES:
+                if fname not in names:
+                    continue   # optional extras (icons) may be absent
                 out = os.path.join(tmp, fname)
                 with open(out, "wb") as fh:
                     fh.write(zf.read(fname))
@@ -233,7 +238,7 @@ def apply_code_update():
         # back up current files, then atomically swap
         backup = os.path.join(SUPPORT_DIR, "backup", VERSION)
         os.makedirs(backup, exist_ok=True)
-        for fname in UPDATE_FILES:
+        for fname in staged:
             cur = os.path.join(HERE, fname)
             if os.path.exists(cur):
                 shutil.copy2(cur, os.path.join(backup, fname))
@@ -860,6 +865,9 @@ def _set(job_id, **kw):
 LOGIN_PAGE = """<!DOCTYPE html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>:: TUBE-RIPPER :: SIGN IN ::</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="TUBE-RIPPER">
 <style>
   *{box-sizing:border-box}
   body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
@@ -995,6 +1003,11 @@ class Handler(BaseHTTPRequestHandler):
         qs = parse_qs(urlparse(self.path).query)
         if not self._ip_ok():
             return
+        # Icons are public (the login page and bookmarks need them, pre-auth).
+        if path in ("/favicon.svg", "/favicon.ico"):
+            return self._serve_static(os.path.join(HERE, "favicon.svg"), "image/svg+xml")
+        if path in ("/apple-touch-icon.png", "/apple-touch-icon-precomposed.png"):
+            return self._serve_static(os.path.join(HERE, "apple-touch-icon.png"), "image/png")
         if not self._authed(qs):
             # Unknown device: show the PIN login for the page, refuse everything else.
             if path in ("/", "/index.html"):
@@ -1197,6 +1210,18 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def _serve_static(self, fp, ctype):
+        if not os.path.isfile(fp):
+            return self.send_error(404)
+        with open(fp, "rb") as fh:
+            data = fh.read()
+        self.send_response(200)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(data)))
+        self.send_header("Cache-Control", "max-age=86400")
+        self.end_headers()
+        self.wfile.write(data)
+
     def _serve_login(self):
         html = LOGIN_PAGE.encode("utf-8")
         self.send_response(200)
@@ -1245,9 +1270,11 @@ def main():
         _open_browser(want_port)
         return
 
-    # Bind, hunting for a free port if the preferred one is taken.
+    # In app mode the port must stay stable (1337) so phone bookmarks and the
+    # launcher's "Open" keep working; only hunt in source mode.
+    candidates = [want_port] if app_mode else list(range(want_port, want_port + 12))
     server, port = None, want_port
-    for p in range(want_port, want_port + 12):
+    for p in candidates:
         try:
             server = ThreadingHTTPServer((host, p), Handler)
             port = p
@@ -1277,7 +1304,7 @@ def main():
         f"   ffmpeg: {'OK' if have_ffmpeg() else 'MISSING'}")
     print("=" * 64)
 
-    if app_mode and not WRAPPED:
+    if app_mode and not WRAPPED and os.environ.get("TR_NO_OPEN") != "1":
         threading.Timer(0.8, _open_browser, args=(port,)).start()
 
     try:

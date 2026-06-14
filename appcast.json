@@ -1,9 +1,9 @@
 {
   "version": "1.0.0",
   "published": "2026-06-14",
-  "notes": "First public build \u2014 opens in your browser at localhost:1337 (universal, no Rosetta). YouTube + Shorts, playlists/channels, MP3, quality presets, choose-folder, per-browser cookie guidance, self-update, yt-dlp refresh. Phone access via a stable hostname + one-time PIN (Tailscale for away-from-home) and save-to-device. TikTok/Instagram/Facebook experimental.",
+  "notes": "First public build \u2014 browser app at localhost:1337 (universal, no Rosetta), menu-bar launcher. YouTube + Shorts, playlists/channels, MP3, quality presets, choose-folder, per-browser cookie guidance, self-update, yt-dlp refresh. Phone: stable hostname + one-time PIN (Tailscale for away) + save-to-device. New app icon + favicon. TikTok/Instagram/Facebook experimental.",
   "code_url": "https://raw.githubusercontent.com/goldenpathwalkthroughs/tube-ripper/main/releases/tuberipper-1.0.0.zip",
-  "code_sha256": "a5e84671f2bef7f8fe7a4291a2ad5835fed9cb368d0b620b151b4e9768312f7f",
+  "code_sha256": "1ed351eb67f62f07fb60aa8625fc85fde3d4ff2f353c163ef1eefdfd235fb76f",
   "requires_full": false,
   "full_url": "https://github.com/goldenpathwalkthroughs/tube-ripper/releases/latest"
 }

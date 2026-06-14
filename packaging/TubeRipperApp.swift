@@ -1,13 +1,13 @@
-// TUBE-RIPPER DELUXE 2000 — native launcher.
+// TUBE-RIPPER DELUXE 2000 — native launcher (menu-bar agent).
 //
 // A real universal Mach-O app so Finder always launches it natively (no
-// Rosetta, no "won't be supported" prompt, no instant-quit on Apple Silicon
-// machines without Rosetta — the bug a shell-script launcher caused).
+// Rosetta, no instant-quit on Apple Silicon). It runs the bundled server and
+// opens the UI in the user's default browser.
 //
-// It picks the correct-arch bundled Python, starts the local server, and the
-// server opens the UI in the user's default browser. We stay alive (no window,
-// agent app) to manage the server: a self-update makes the server exit 42, and
-// we relaunch it; a clean quit (the in-page QUIT button) exits the app.
+// It lives in the MENU BAR (no Dock icon) so it's always discoverable while
+// running: click the icon for Open / Quit. Clicking the app again, or closing
+// the browser tab and re-opening the app, re-opens the page (handled via
+// applicationShouldHandleReopen) — fixing the "nothing happens" dead-end.
 
 import Cocoa
 
@@ -23,13 +23,66 @@ func isAppleSilicon() -> Bool {
 class AppDelegate: NSObject, NSApplicationDelegate {
     var server: Process?
     var quitting = false
+    var statusItem: NSStatusItem!
     let resDir = Bundle.main.resourcePath ?? "."
+    let port = 1337
 
     func applicationDidFinishLaunching(_ note: Notification) {
-        NSApp.setActivationPolicy(.accessory)   // background agent, no Dock icon
+        NSApp.setActivationPolicy(.accessory)   // menu-bar agent, no Dock icon
+        setupMenuBar()
         startServer()
+        waitForServer { self.openBrowser() }
     }
 
+    // Clicking the app (or its icon) while it's already running lands here —
+    // re-open the page instead of doing nothing.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool {
+        openBrowser()
+        return true
+    }
+
+    func applicationWillTerminate(_ note: Notification) {
+        quitting = true
+        server?.terminate()
+    }
+
+    // -- menu bar --
+    func setupMenuBar() {
+        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        if let btn = statusItem.button {
+            let img = NSImage(systemSymbolName: "play.rectangle.fill",
+                            accessibilityDescription: "TUBE-RIPPER")
+            img?.isTemplate = true
+            btn.image = img
+            btn.toolTip = "TUBE-RIPPER DELUXE 2000"
+        }
+        let menu = NSMenu()
+        let openItem = NSMenuItem(title: "Open TUBE-RIPPER",
+                                action: #selector(openClicked), keyEquivalent: "o")
+        openItem.target = self
+        menu.addItem(openItem)
+        menu.addItem(.separator())
+        let info = NSMenuItem(title: "Running at localhost:\(port)", action: nil, keyEquivalent: "")
+        info.isEnabled = false
+        menu.addItem(info)
+        menu.addItem(.separator())
+        let quitItem = NSMenuItem(title: "Quit TUBE-RIPPER",
+                                action: #selector(quitClicked), keyEquivalent: "q")
+        quitItem.target = self
+        menu.addItem(quitItem)
+        statusItem.menu = menu
+    }
+
+    @objc func openClicked() { openBrowser() }
+    @objc func quitClicked() { NSApp.terminate(nil) }
+
+    func openBrowser() {
+        if let url = URL(string: "http://localhost:\(port)/") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
+    // -- server subprocess --
     func startServer() {
         let arch = isAppleSilicon() ? "arm64" : "x86_64"
         let py = "\(resDir)/python/\(arch)/bin/python3"
@@ -39,8 +92,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         p.executableURL = URL(fileURLWithPath: py)
         p.arguments = ["\(resDir)/app/server.py", "--app"]
         var env = ProcessInfo.processInfo.environment
-        env["TR_APP"] = "1"                       // app mode: server opens the browser
+        env["TR_APP"] = "1"
+        env["TR_NO_OPEN"] = "1"          // the launcher opens the browser, not the server
         env["TR_FFMPEG_DIR"] = ffdir
+        env["PORT"] = String(port)
         env["PATH"] = "\(ffdir):\(resDir)/bin:" + (env["PATH"] ?? "/usr/bin:/bin")
         p.environment = env
         p.terminationHandler = { [weak self] proc in
@@ -48,7 +103,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             DispatchQueue.main.async {
                 if proc.terminationStatus == 42 {   // update installed → relaunch engine
                     self.startServer()
-                } else {                            // clean quit / crash → exit app
+                } else {                            // engine quit/crashed → exit app
                     NSApp.terminate(nil)
                 }
             }
@@ -64,9 +119,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    func applicationWillTerminate(_ note: Notification) {
-        quitting = true
-        server?.terminate()
+    func waitForServer(attempt: Int = 0, then done: @escaping () -> Void) {
+        let url = URL(string: "http://127.0.0.1:\(port)/api/health")!  // loopback: no login
+        var req = URLRequest(url: url); req.timeoutInterval = 2
+        URLSession.shared.dataTask(with: req) { _, resp, _ in
+            if let h = resp as? HTTPURLResponse, h.statusCode == 200 {
+                DispatchQueue.main.async { done() }
+            } else if attempt < 80 {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                    self.waitForServer(attempt: attempt + 1, then: done)
+                }
+            }
+        }.resume()
     }
 }
 

@@ -36,10 +36,15 @@ mkdir -p "$REL"
 /usr/bin/sed -i '' -E "s/^VERSION = \".*\"/VERSION = \"$VER\"/" "$ROOT/server.py"
 echo ">> set VERSION = $VER in server.py"
 
-# 2. build the code payload (exactly the files the updater may overwrite)
+# 2. build the code payload (the files the updater may overwrite). Icons are
+#    included when present so a code update can refresh them too.
 ZIP="$REL/tuberipper-$VER.zip"
 rm -f "$ZIP"
-( cd "$ROOT" && zip -q -j "$ZIP" server.py index.html )
+PAYLOAD="server.py index.html"
+for f in favicon.svg apple-touch-icon.png; do
+  [ -f "$ROOT/$f" ] && PAYLOAD="$PAYLOAD $f"
+done
+( cd "$ROOT" && zip -q -j "$ZIP" $PAYLOAD )
 SHA="$(shasum -a 256 "$ZIP" | awk '{print $1}')"
 echo ">> built releases/tuberipper-$VER.zip"
 
