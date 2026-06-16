@@ -360,7 +360,7 @@
         <div class="serial">
           <label class="lbl" style="margin:0">⚿ SESSION COOKIES:</label>
           <select id="browser" class="field" style="flex:0 1 200px;min-width:160px">
-            <option value="">none (limited quality)</option>
+            <option value="">none — recommended</option>
             <option value="safari">Safari</option>
             <option value="chrome">Chrome</option>
             <option value="brave">Brave</option>
@@ -612,34 +612,31 @@ const NAMES={safari:"Safari",chrome:"Chrome",brave:"Brave",firefox:"Firefox",
   edge:"Edge",chromium:"Chromium",vivaldi:"Vivaldi",opera:"Opera"};
 const CHROMIUM=["chrome","brave","edge","chromium","vivaldi","opera"];
 
-// Browser-aware guidance: macOS gates cookie access differently per browser.
-function cookieNote(b, auto){
+let DETECTED = "";   // the browser this page is open in (a hint, not auto-applied)
+
+// Cookies are now OPT-IN: leaving this on "none" usually works best, because a
+// logged-in YouTube session can trigger formats this tool can't fetch. Only
+// reach for cookies if your quality comes back limited.
+function cookieNote(b){
   const el=$("#cookienote");
-  const tag = auto ? '✓ Auto-detected ' : '';
   if(b==="safari"){
     el.innerHTML =
-      `▒ ${tag}<b style="color:var(--neon)">Safari</b>. macOS keeps Safari's cookies private, so HD/4K needs a one-time `+
-      `<a class="lnk" href="#" id="fdalink">Full Disk Access</a> grant for TUBE-RIPPER. `+
-      `Easier: sign in to YouTube in <b>Chrome/Brave/Edge/Firefox</b> (no setup) and pick it above. ▒`;
+      `▒ <b style="color:var(--neon)">Safari</b> cookies are private on macOS — they need a one-time `+
+      `<a class="lnk" href="#" id="fdalink">Full Disk Access</a> grant. Chrome/Brave/Edge/Firefox are easier. ▒`;
     const f=$("#fdalink"); if(f) f.onclick=e=>{e.preventDefault();beep(740);fetch(api("/api/fda"));
-      showErr("Opening Full Disk Access settings… add TUBE-RIPPER (or its app) to the list, tick it, then ANALYZE again.");};
+      showErr("Opening Full Disk Access settings… add TUBE-RIPPER to the list, tick it, then ANALYZE again.");};
   } else if(b==="firefox"){
-    el.innerHTML = `▒ ${tag}<b style="color:var(--neon)">Firefox</b> — reusing its YouTube session for HD/4K. No setup needed. ▒`;
+    el.innerHTML = `▒ Using <b style="color:var(--neon)">Firefox</b>'s session (no setup needed). ▒`;
   } else if(CHROMIUM.includes(b)){
-    el.innerHTML = `▒ ${tag}<b style="color:var(--neon)">${NAMES[b]}</b> — reusing its YouTube session for HD/4K. macOS may ask once to allow "Safe Storage" — click <b>Always Allow</b>. ▒`;
+    el.innerHTML = `▒ Using <b style="color:var(--neon)">${NAMES[b]}</b>'s session. macOS may ask once to allow "Safe Storage" — click <b>Always Allow</b>. If downloads then fail, switch back to <b>none</b>. ▒`;
   } else {
-    el.innerHTML = `▒ YouTube hides HD/4K behind a session. Pick the browser you're signed in to YouTube with to unlock the full quality ladder (read locally — nothing leaves your machine). ▒`;
+    const hint = DETECTED ? ` (you appear to use <b style="color:var(--neon)">${NAMES[DETECTED]||DETECTED}</b>)` : "";
+    el.innerHTML = `▒ Leave this on <b style="color:var(--neon)">none</b> — it works for most videos. <b>Only if your quality comes back limited</b>, pick the browser you watch YouTube in${hint}. ▒`;
   }
 }
-$("#browser").addEventListener("change", ()=>cookieNote($("#browser").value, false));
+$("#browser").addEventListener("change", ()=>cookieNote($("#browser").value));
 
-detectBrowser().then(b=>{
-  const sel=$("#browser");
-  if(b && [...sel.options].some(o=>o.value===b)){
-    sel.value=b;
-    cookieNote(b, true);
-  }
-});
+detectBrowser().then(b=>{ DETECTED = b || ""; cookieNote($("#browser").value); });
 
 /* ===== destination folder ===== */
 let HOME="";

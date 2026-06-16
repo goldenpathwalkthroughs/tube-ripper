@@ -1,9 +1,9 @@
 {
-  "version": "1.0.2",
+  "version": "1.0.3",
   "published": "2026-06-16",
-  "notes": "Fix: ripping YouTube Shorts / vertical videos and exact audio-stream picks no longer error with 'Requested format is not available' \u2014 selectors now fall back to best-available, and that error now suggests enabling SESSION COOKIES.",
-  "code_url": "https://raw.githubusercontent.com/goldenpathwalkthroughs/tube-ripper/main/releases/tuberipper-1.0.2.zip",
-  "code_sha256": "1d66d82348960e3c7f22f93afdb442578488a6488397bfe4c2a48d7e9f7f122d",
+  "notes": "Cookies are now opt-in (default 'none'), because a logged-in YouTube session can trigger formats this tool can't fetch ('Requested format is not available'). If you do pick a browser and it fails, the download now automatically retries without cookies. Pick a browser only if quality comes back limited.",
+  "code_url": "https://raw.githubusercontent.com/goldenpathwalkthroughs/tube-ripper/main/releases/tuberipper-1.0.3.zip",
+  "code_sha256": "27dd1af3a05b9b1bb3ea95493e9995dd9bc801e41d23a81014f19a8980cefaaa",
   "requires_full": false,
   "full_url": "https://github.com/goldenpathwalkthroughs/tube-ripper/releases/latest"
 }

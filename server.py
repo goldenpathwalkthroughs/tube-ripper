@@ -37,7 +37,7 @@ from http.cookies import SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs, quote
 
-VERSION = "1.0.2"
+VERSION = "1.0.3"
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HOME = os.path.realpath(os.path.expanduser("~"))
@@ -744,14 +744,10 @@ def quality_args(quality):
     return ["-f", "bv*+ba/b", "--merge-output-format", "mp4"]
 
 
-def run_download(job_id, url, browser, sel):
-    batch = bool(sel.get("batch"))
-    dest = sel.get("dest") or DEFAULT_DEST
-    plat_name = detect_platform(url)["name"]
+def _build_cmd(url, browser, sel, dest, batch):
     cmd = ytdlp_cmd() + ["--newline", "--no-part", "--ignore-errors"] + cookie_args(browser)
     if ffmpeg_dir():
         cmd += ["--ffmpeg-location", ffmpeg_dir()]
-
     if batch:
         cmd += ["--yes-playlist"]
         limit = sel.get("limit")
@@ -771,57 +767,49 @@ def run_download(job_id, url, browser, sel):
         cmd += ["-x", "--audio-format", "mp3", "--audio-quality", "0"]
         fid = sel.get("format_id")
         if fid:
-            cmd += ["-f", f"{fid}/bestaudio/best"]   # fall back if that id is gone
+            cmd += ["-f", f"{fid}/bestaudio/best"]
     elif sel.get("kind") == "audio":
         fid = sel.get("format_id") or "bestaudio"
         cmd += ["-f", f"{fid}/bestaudio/best"]
     else:
         fmt_id = sel.get("format_id", "")
-        cmd += ["-f", f"{fmt_id}+bestaudio/{fmt_id}/best",
-                "--merge-output-format", "mp4"]
-
+        cmd += ["-f", f"{fmt_id}+bestaudio/{fmt_id}/best", "--merge-output-format", "mp4"]
     cmd.append(url)
-    _set(job_id, status="running", line="Spawning yt-dlp...", percent=0,
-        batch=batch, item=0, total=0, done_count=0)
+    return cmd
 
+
+def _stream_ytdlp(job_id, cmd, batch):
+    """Run yt-dlp, stream progress into the job, return (ok, final_file, done_count)."""
     try:
-        proc = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-            text=True, bufsize=1,
-        )
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                text=True, bufsize=1)
     except Exception as e:
         _set(job_id, status="error", error=str(e))
-        return
+        return (False, None, 0)
 
-    final_file = None
-    cur_item, total, done_count = 0, 0, 0
+    final_file, cur_item, total, done_count = None, 0, 0, 0
     for line in proc.stdout:
         line = line.rstrip()
         if not line:
             continue
         update = {"line": line}
-
         it = ITEM_RE.search(line)
         if it:
             cur_item, total = int(it.group(1)), int(it.group(2))
             update["item"] = cur_item
             update["total"] = total
-
         m = PCT_RE.search(line)
         if m:
             file_pct = float(m.group(1))
             update["file_percent"] = file_pct
-            if batch and total:
-                update["percent"] = round(((cur_item - 1) + file_pct / 100.0) / total * 100, 1)
-            else:
-                update["percent"] = file_pct
+            update["percent"] = (round(((cur_item - 1) + file_pct / 100.0) / total * 100, 1)
+                                if batch and total else file_pct)
         s = SPEED_RE.search(line)
         if s:
             update["speed"] = s.group(1)
         e = ETA_RE.search(line)
         if e:
             update["eta"] = e.group(1)
-
         fm = re.search(r"\[(?:download|Merger|ExtractAudio)\].*?(?:Destination:|Merging formats into|Destination)\s+\"?(.+?)\"?$", line)
         if fm:
             final_file = fm.group(1)
@@ -835,11 +823,30 @@ def run_download(job_id, url, browser, sel):
         _set(job_id, **update)
 
     proc.wait()
-    # --ignore-errors means a non-zero exit can still mean "mostly succeeded"
-    # for a batch; report what we got.
-    if proc.returncode == 0 or (batch and done_count):
+    ok = proc.returncode == 0 or (batch and done_count > 0)
+    return (ok, final_file, done_count)
+
+
+def run_download(job_id, url, browser, sel):
+    batch = bool(sel.get("batch"))
+    dest = sel.get("dest") or DEFAULT_DEST
+    plat_name = detect_platform(url)["name"]
+
+    _set(job_id, status="running", line="Spawning yt-dlp...", percent=0,
+        batch=batch, item=0, total=0, done_count=0)
+
+    ok, final_file, done_count = _stream_ytdlp(job_id, _build_cmd(url, browser, sel, dest, batch), batch)
+
+    # YouTube now often serves a logged-in session ONLY broken SABR formats, so
+    # a download with cookies can fail where no-cookies works. Auto-retry clean.
+    if not ok and browser:
+        _set(job_id, line="Session cookies didn't work — retrying without them…",
+            percent=0, item=0, total=0, done_count=0)
+        ok, final_file, done_count = _stream_ytdlp(job_id, _build_cmd(url, "", sel, dest, batch), batch)
+
+    if ok:
         if batch:
-            line = f"BATCH COMPLETE. Ripped {done_count} of {total or done_count} videos."
+            line = f"BATCH COMPLETE. Ripped {done_count} video(s)."
             name = None
         else:
             line = "RIP COMPLETE. Welcome to the scene."
@@ -847,22 +854,14 @@ def run_download(job_id, url, browser, sel):
         _set(job_id, status="done", percent=100, line=line,
             file=name, file_path=(final_file if not batch else None),
             done_count=done_count)
-    elif batch and not done_count:
-        msg = f"No videos downloaded — {plat_name} blocked every item (usually the session gate)."
-        if not browser:
-            msg += f"  ►► FIX: pick the browser you're signed in to {plat_name} with from the SESSION COOKIES menu, then try again."
-        _set(job_id, status="error", error=msg)
     else:
         cur = JOBS.get(job_id, {})
-        msg = cur.get("line") or "yt-dlp exited non-zero."
-        m = msg.lower()
-        gate = ("403" in msg or "forbidden" in m or "sabr" in m or "login" in m
-                or "private" in m or "po token" in m or "format is not available"
-                or "requested format" in m)
-        if gate and not browser:
-            msg += (f"  ►► FIX: this often means {plat_name} is only serving limited "
-                    f"formats. Pick the browser you're signed in to {plat_name} with "
-                    f"from the SESSION COOKIES menu, then try again.")
+        msg = cur.get("line") or "yt-dlp couldn't download this."
+        ml = msg.lower()
+        if browser and ("format" in ml or "403" in msg or "forbidden" in ml
+                        or "sabr" in ml or "po token" in ml):
+            msg += ("  ►► TIP: try SESSION COOKIES = none — a logged-in session can make "
+                    "YouTube serve formats this tool can't fetch.")
         _set(job_id, status="error", error=msg)
 
 
