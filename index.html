@@ -941,7 +941,7 @@ $("#rip").onclick=async()=>{
   log(sel.batch?("» batch target: "+STATE.url+(sel.limit?(" (first "+sel.limit+")"):" (all)")):("» target: "+STATE.url));
   try{
     const r=await fetch(api("/api/download"),{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(Object.assign({url:STATE.url,browser:$("#browser").value},sel))});
+      body:JSON.stringify(Object.assign({url:STATE.url,browser:$("#browser").value,auto_browser:DETECTED},sel))});
     const d=await r.json();
     if(!r.ok||!d.job_id){log("✖ "+(d.error||"failed to start"),"err");$("#rip").disabled=false;return;}
     pollJob(d.job_id);

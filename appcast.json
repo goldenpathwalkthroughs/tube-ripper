@@ -1,9 +1,9 @@
 {
-  "version": "1.0.4",
+  "version": "1.0.5",
   "published": "2026-06-16",
-  "notes": "Downloads now play in QuickTime / Photos / iPhone by default: the STANDARD preset uses H.264 + AAC (up to 1080p) and is the recommended 'plays everywhere' option. HIGHEST stays best-quality (4K/60fps may be VP9/AV1, which needs VLC). 'Save to this device' now appears only on phones/other devices \u2014 on the Mac the file is already in your Downloads folder.",
-  "code_url": "https://raw.githubusercontent.com/goldenpathwalkthroughs/tube-ripper/main/releases/tuberipper-1.0.4.zip",
-  "code_sha256": "a19e80a6c41072ee882bcb5775f3190b4dfda89d877e899e8d93f9f26ef83d86",
+  "notes": "Instagram & Facebook reels: the app now auto-uses your browser's session when those sites need a sign-in (they require login), while YouTube stays cookie-free. Smarter, platform-aware error tips. STANDARD downloads remain H.264/AAC for QuickTime.",
+  "code_url": "https://raw.githubusercontent.com/goldenpathwalkthroughs/tube-ripper/main/releases/tuberipper-1.0.5.zip",
+  "code_sha256": "059546d68b115e8bd7e9956b084a7c129ab2a2e0273101ff5fb59981ffbcb867",
   "requires_full": false,
   "full_url": "https://github.com/goldenpathwalkthroughs/tube-ripper/releases/latest"
 }

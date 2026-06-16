@@ -37,7 +37,7 @@ from http.cookies import SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs, quote
 
-VERSION = "1.0.4"
+VERSION = "1.0.5"
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HOME = os.path.realpath(os.path.expanduser("~"))
@@ -832,22 +832,29 @@ def _stream_ytdlp(job_id, cmd, batch):
     return (ok, final_file, done_count)
 
 
-def run_download(job_id, url, browser, sel):
+def run_download(job_id, url, browser, sel, auto_browser=""):
     batch = bool(sel.get("batch"))
     dest = sel.get("dest") or DEFAULT_DEST
-    plat_name = detect_platform(url)["name"]
+    plat = detect_platform(url)
+    plat_name = plat["name"]
 
     _set(job_id, status="running", line="Spawning yt-dlp...", percent=0,
         batch=batch, item=0, total=0, done_count=0)
 
     ok, final_file, done_count = _stream_ytdlp(job_id, _build_cmd(url, browser, sel, dest, batch), batch)
 
-    # YouTube now often serves a logged-in session ONLY broken SABR formats, so
-    # a download with cookies can fail where no-cookies works. Auto-retry clean.
+    # Bidirectional cookie fallback:
+    #  • YouTube with cookies often gets only broken SABR formats → retry clean.
+    #  • Instagram/Facebook/etc. need a logged-in session → if no cookies were
+    #    used, retry with the browser the page was opened in.
     if not ok and browser:
         _set(job_id, line="Session cookies didn't work — retrying without them…",
             percent=0, item=0, total=0, done_count=0)
         ok, final_file, done_count = _stream_ytdlp(job_id, _build_cmd(url, "", sel, dest, batch), batch)
+    elif not ok and not browser and plat["key"] != "youtube" and auto_browser:
+        _set(job_id, line=f"{plat_name} needs a sign-in — retrying with your {auto_browser} session…",
+            percent=0, item=0, total=0, done_count=0)
+        ok, final_file, done_count = _stream_ytdlp(job_id, _build_cmd(url, auto_browser, sel, dest, batch), batch)
 
     if ok:
         if batch:
@@ -863,10 +870,17 @@ def run_download(job_id, url, browser, sel):
         cur = JOBS.get(job_id, {})
         msg = cur.get("line") or "yt-dlp couldn't download this."
         ml = msg.lower()
-        if browser and ("format" in ml or "403" in msg or "forbidden" in ml
-                        or "sabr" in ml or "po token" in ml):
-            msg += ("  ►► TIP: try SESSION COOKIES = none — a logged-in session can make "
-                    "YouTube serve formats this tool can't fetch.")
+        plat_key = detect_platform(url)["key"]
+        login_ish = ("login" in ml or "private" in ml or "rate-limit" in ml
+                    or "not available" in ml or "cookies" in ml or "sign in" in ml
+                    or "empty" in ml or "no video" in ml)
+        if plat_key == "youtube" and browser and ("format" in ml or "403" in msg
+                or "forbidden" in ml or "sabr" in ml or "po token" in ml):
+            msg += ("  ►► TIP: try SESSION COOKIES = none — a logged-in YouTube session can "
+                    "make YouTube serve formats this tool can't fetch.")
+        elif plat_key != "youtube" and not browser and login_ish:
+            msg += (f"  ►► TIP: {plat_name} usually needs you to be logged in. Pick the browser "
+                    f"you're signed in to {plat_name} with from the SESSION COOKIES menu, then retry.")
         _set(job_id, status="error", error=msg)
 
 
@@ -1153,7 +1167,8 @@ class Handler(BaseHTTPRequestHandler):
 
         if path == "/api/download":
             url = (body.get("url") or "").strip()
-            browser = body.get("browser")
+            browser = (body.get("browser") or "").strip()
+            auto_browser = (body.get("auto_browser") or "").strip()
             if not _looks_like_url(url):
                 return self._json({"error": "bad url"}, 400)
             try:
@@ -1172,7 +1187,7 @@ class Handler(BaseHTTPRequestHandler):
             job_id = uuid.uuid4().hex[:12]
             _set(job_id, status="queued", percent=0, line="Queued.", dest=dest)
             t = threading.Thread(target=run_download,
-                                args=(job_id, url, browser, sel),
+                                args=(job_id, url, browser, sel, auto_browser),
                                 daemon=True)
             t.start()
             return self._json({"job_id": job_id})
