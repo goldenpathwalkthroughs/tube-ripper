@@ -1,9 +1,9 @@
 {
-  "version": "1.0.1",
-  "published": "2026-06-15",
-  "notes": "Fix: handle all Apple touch-icon sizes; stray/stale URLs now land on the app instead of a 404 page; optional TR_DEBUG request logging.",
-  "code_url": "https://raw.githubusercontent.com/goldenpathwalkthroughs/tube-ripper/main/releases/tuberipper-1.0.1.zip",
-  "code_sha256": "49607dad57493af706c7d9e8f48b7072cf4a1220a3f09d310fedfaccb9e74299",
+  "version": "1.0.2",
+  "published": "2026-06-16",
+  "notes": "Fix: ripping YouTube Shorts / vertical videos and exact audio-stream picks no longer error with 'Requested format is not available' \u2014 selectors now fall back to best-available, and that error now suggests enabling SESSION COOKIES.",
+  "code_url": "https://raw.githubusercontent.com/goldenpathwalkthroughs/tube-ripper/main/releases/tuberipper-1.0.2.zip",
+  "code_sha256": "1d66d82348960e3c7f22f93afdb442578488a6488397bfe4c2a48d7e9f7f122d",
   "requires_full": false,
   "full_url": "https://github.com/goldenpathwalkthroughs/tube-ripper/releases/latest"
 }

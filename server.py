@@ -37,7 +37,7 @@ from http.cookies import SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs, quote
 
-VERSION = "1.0.1"
+VERSION = "1.0.2"
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HOME = os.path.realpath(os.path.expanduser("~"))
@@ -769,10 +769,12 @@ def run_download(job_id, url, browser, sel):
         cmd += quality_args(quality)
     elif sel.get("mp3"):
         cmd += ["-x", "--audio-format", "mp3", "--audio-quality", "0"]
-        if sel.get("format_id"):
-            cmd += ["-f", sel["format_id"]]
+        fid = sel.get("format_id")
+        if fid:
+            cmd += ["-f", f"{fid}/bestaudio/best"]   # fall back if that id is gone
     elif sel.get("kind") == "audio":
-        cmd += ["-f", sel.get("format_id", "bestaudio")]
+        fid = sel.get("format_id") or "bestaudio"
+        cmd += ["-f", f"{fid}/bestaudio/best"]
     else:
         fmt_id = sel.get("format_id", "")
         cmd += ["-f", f"{fmt_id}+bestaudio/{fmt_id}/best",
@@ -853,9 +855,14 @@ def run_download(job_id, url, browser, sel):
     else:
         cur = JOBS.get(job_id, {})
         msg = cur.get("line") or "yt-dlp exited non-zero."
-        if ("403" in msg or "Forbidden" in msg or "SABR" in msg or "login" in msg.lower()
-                or "private" in msg.lower() or "PO Token" in msg) and not browser:
-            msg += f"  ►► FIX: pick the browser you're signed in to {plat_name} with from the SESSION COOKIES menu, then try again."
+        m = msg.lower()
+        gate = ("403" in msg or "forbidden" in m or "sabr" in m or "login" in m
+                or "private" in m or "po token" in m or "format is not available"
+                or "requested format" in m)
+        if gate and not browser:
+            msg += (f"  ►► FIX: this often means {plat_name} is only serving limited "
+                    f"formats. Pick the browser you're signed in to {plat_name} with "
+                    f"from the SESSION COOKIES menu, then try again.")
         _set(job_id, status="error", error=msg)
 
 
