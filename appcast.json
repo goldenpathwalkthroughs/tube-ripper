@@ -1,9 +1,9 @@
 {
-  "version": "1.0.3",
+  "version": "1.0.4",
   "published": "2026-06-16",
-  "notes": "Cookies are now opt-in (default 'none'), because a logged-in YouTube session can trigger formats this tool can't fetch ('Requested format is not available'). If you do pick a browser and it fails, the download now automatically retries without cookies. Pick a browser only if quality comes back limited.",
-  "code_url": "https://raw.githubusercontent.com/goldenpathwalkthroughs/tube-ripper/main/releases/tuberipper-1.0.3.zip",
-  "code_sha256": "27dd1af3a05b9b1bb3ea95493e9995dd9bc801e41d23a81014f19a8980cefaaa",
+  "notes": "Downloads now play in QuickTime / Photos / iPhone by default: the STANDARD preset uses H.264 + AAC (up to 1080p) and is the recommended 'plays everywhere' option. HIGHEST stays best-quality (4K/60fps may be VP9/AV1, which needs VLC). 'Save to this device' now appears only on phones/other devices \u2014 on the Mac the file is already in your Downloads folder.",
+  "code_url": "https://raw.githubusercontent.com/goldenpathwalkthroughs/tube-ripper/main/releases/tuberipper-1.0.4.zip",
+  "code_sha256": "a19e80a6c41072ee882bcb5775f3190b4dfda89d877e899e8d93f9f26ef83d86",
   "requires_full": false,
   "full_url": "https://github.com/goldenpathwalkthroughs/tube-ripper/releases/latest"
 }

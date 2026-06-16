@@ -645,10 +645,12 @@ const saveDest = () => { try{ localStorage.setItem("tr_dest",$("#dest").value); 
 $("#dest").addEventListener("change",saveDest);
 
 /* ===== health check ===== */
+let IS_LOCAL = true;   // is this page being viewed on the Mac itself (loopback)?
 fetch(api("/api/health")).then(r=>r.json()).then(h=>{
   const yt=h.ytdlp?'<span class="good">yt-dlp ✓</span>':'<span class="bad">yt-dlp ✗ (pip install yt-dlp)</span>';
   const ff=h.ffmpeg?'<span class="good">ffmpeg ✓</span>':'<span class="bad">ffmpeg ✗</span>';
   $("#health").innerHTML=`SUBSYSTEMS: ${yt} &nbsp;·&nbsp; ${ff}`;
+  IS_LOCAL = (h.local !== false);
   HOME=h.home||"";
   let saved="";try{saved=localStorage.getItem("tr_dest")||"";}catch(e){}
   $("#dest").value = saved || friendly(h.default_dest || "~/Downloads");
@@ -840,10 +842,13 @@ function renderVideo(d){
   const P=d.presets||{};
   if(P.highest)
     addPreset("","⬆",`HIGHEST · ${P.highest.label}`,
-      `${P.highest.ext} · ~${P.highest.size_h} · auto-merges best audio`,{quality:"highest"});
+      `${P.highest.ext} · ~${P.highest.size_h} · best quality (4K/60fps may need VLC to play)`,{quality:"highest"});
   if(P.standard)
-    addPreset("","≈",`STANDARD · ${P.standard.label}`,
-      `${P.standard.ext} · ~${P.standard.size_h} · smaller, plays anywhere`,{quality:"standard"});
+    addPreset("","≈",`STANDARD · up to 1080p`,
+      `H.264 · plays everywhere (QuickTime, Photos, iPhone) ✓`,{quality:"standard"});
+  else
+    addPreset("","≈",`STANDARD · up to 1080p`,
+      `H.264 · plays everywhere (QuickTime, Photos, iPhone) ✓`,{quality:"standard"});
   addPreset("audio","♪","AUDIO ONLY · MP3","best audio stream, extracted to MP3",{quality:"audio"});
   $("#presets").style.display="block";
 
@@ -958,9 +963,10 @@ function pollJob(id){
       $("#fill").style.width="100%";$("#pct").textContent="100%";
       log("✔ "+(d.line||"complete"),"ok");
       $("#fname").textContent=d.file||"(see downloads folder)";
-      // single-video downloads can be saved straight to the device viewing this
+      // "Save to this device" only makes sense from a phone/other computer —
+      // on the Mac itself the file is already in the chosen folder.
       const sd=$("#savedevice");
-      if(d.file && !d.batch){ sd.href=api("/api/file?id="+id); sd.style.display=""; }
+      if(d.file && !d.batch && !IS_LOCAL){ sd.href=api("/api/file?id="+id); sd.style.display=""; }
       else { sd.style.display="none"; }
       $("#done").style.display="block";
       $("#rip").disabled=false;

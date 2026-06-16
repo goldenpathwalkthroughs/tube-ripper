@@ -37,7 +37,7 @@ from http.cookies import SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs, quote
 
-VERSION = "1.0.3"
+VERSION = "1.0.4"
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HOME = os.path.realpath(os.path.expanduser("~"))
@@ -738,9 +738,14 @@ def quality_args(quality):
     if quality == "audio":
         return ["-x", "--audio-format", "mp3", "--audio-quality", "0"]
     if quality == "standard":
-        return ["-f", "bv*[height<=1080]+ba/b[height<=1080]/b",
+        # Prefer H.264 + AAC so it plays in QuickTime / Photos / iOS out of the
+        # box; fall back through generic ≤1080p, then anything, so it never fails.
+        return ["-f",
+                "bv*[height<=1080][vcodec^=avc1]+ba[acodec^=mp4a]/"
+                "b[height<=1080][ext=mp4]/"
+                "bv*[height<=1080]+ba/b[height<=1080]/b",
                 "--merge-output-format", "mp4"]
-    # highest
+    # highest — best available (4K/HDR may be VP9/AV1, which needs VLC to play)
     return ["-f", "bv*+ba/b", "--merge-output-format", "mp4"]
 
 
@@ -1036,7 +1041,7 @@ class Handler(BaseHTTPRequestHandler):
                               "ffmpeg": have_ffmpeg(),
                               "default_dest": DEFAULT_DEST,
                               "home": HOME, "app": APP_MODE, "wrapped": WRAPPED,
-                              "version": VERSION,
+                              "local": self._is_loopback(), "version": VERSION,
                               "platforms": [{"name": p["name"], "support": p["support"]}
                                             for p in PLATFORMS]})
         if path == "/api/update/check":
