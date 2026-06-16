@@ -8,20 +8,23 @@ bundled — no Python, yt-dlp, ffmpeg or other installs needed.
 ────────────────────────────────────────────────────────────
 INSTALL (about 30 seconds)
 ────────────────────────────────────────────────────────────
-1.  Drag  TubeRipper.app  into your  Applications  folder.
+Keep both items together in this unzipped folder, then:
 
-2.  The app isn't from the App Store, so macOS blocks it the first
-    time. To unblock it, just DOUBLE-CLICK:
+1.  DOUBLE-CLICK  "Open Me First.command"
 
-        "Open Me First.command"
+    If macOS warns it's from an unidentified developer:
+    RIGHT-CLICK it → Open → Open.  (You only do this once.)
 
-    If macOS warns that it's from an unidentified developer:
-    RIGHT-CLICK it → Open → Open. (You only do this once.)
+This one step does everything: it copies TubeRipper to your
+Applications folder, unblocks it (macOS flags downloaded apps —
+this clears that so the app and its bundled Python can run), and
+launches it. TubeRipper opens in your browser at http://localhost:1337
 
-    That's it — TubeRipper opens in your browser at http://localhost:1337
+From then on, just open TubeRipper from Applications.
 
-   (Alternative, same effect, if you prefer the app icon:
-    right-click TubeRipper.app → Open → Open. One time only.)
+(Order matters: run "Open Me First.command" BEFORE deleting this
+ folder. If the app is already in Applications, the command still
+ finds and unblocks it there.)
 
 ────────────────────────────────────────────────────────────
 USING IT
