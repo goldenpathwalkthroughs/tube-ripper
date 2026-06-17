@@ -1,0 +1,72 @@
+name: windows-qa
+
+# Certifies the Windows build across Windows Server generations (same NT kernel
+# / Win32 API as Windows 10 & 11 desktop): assembles the package, launches it
+# through the real TubeRipper.vbs launcher, and asserts the server boots healthy.
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths:
+      - server.py
+      - packaging/launcher.vbs
+      - packaging/build_win.ps1
+      - .github/workflows/windows-qa.yml
+
+jobs:
+  qa:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, windows-2025]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Environment
+        shell: pwsh
+        run: |
+          "runner: ${{ matrix.os }}"
+          "OS: $([System.Environment]::OSVersion.VersionString)"
+          "64-bit OS: $([System.Environment]::Is64BitOperatingSystem)"
+
+      - name: Build Windows package
+        shell: pwsh
+        run: ./packaging/build_win.ps1
+
+      - name: Bundled runtime info
+        shell: pwsh
+        run: |
+          $app = "build-win\TubeRipper"
+          "bundled python: $(& "$app\python\python.exe" --version)"
+          "pythonw present: $(Test-Path "$app\python\pythonw.exe")"
+          "ffmpeg present:  $(Test-Path "$app\bin\ffmpeg.exe")"
+          "yt-dlp module:   $(& "$app\python\python.exe" -c "import yt_dlp,sys;print(yt_dlp.version.__version__)")"
+
+      - name: Launch via TubeRipper.vbs and assert healthy boot
+        shell: pwsh
+        run: |
+          $app = "$PWD\build-win\TubeRipper"
+          $env:TR_NO_OPEN = "1"   # headless runner: don't try to open a browser
+          # Run the REAL launcher (batch mode so no GUI prompts), detached.
+          Start-Process -FilePath "cscript.exe" -ArgumentList "//nologo","//B","$app\TubeRipper.vbs" -WindowStyle Hidden
+          $ok = $false
+          for ($i=0; $i -lt 25; $i++) {
+            Start-Sleep -Seconds 2
+            try { $h = Invoke-RestMethod "http://localhost:1337/api/health"; if ($h.ytdlp -and $h.ffmpeg) { $ok=$true; break } } catch {}
+          }
+          if ($ok) {
+            "LAUNCHER OK on ${{ matrix.os }} — health: ytdlp=$($h.ytdlp) ffmpeg=$($h.ffmpeg) version=$($h.version) local=$($h.local)"
+          } else {
+            # Diagnose: run the server directly to capture its output.
+            "VBS launch did not become healthy — diagnosing with direct python…"
+            Start-Process -FilePath "$app\python\python.exe" -ArgumentList "$app\app\server.py","--app" `
+              -WindowStyle Hidden -RedirectStandardOutput "$app\out.log" -RedirectStandardError "$app\err.log" | Out-Null
+            Start-Sleep -Seconds 8
+            "--- server stderr ---"; Get-Content "$app\err.log" -ErrorAction SilentlyContinue
+            "--- server stdout ---"; Get-Content "$app\out.log" -ErrorAction SilentlyContinue
+            throw "TubeRipper.vbs did not bring up a healthy server on ${{ matrix.os }}"
+          }
+          # Quit cleanly (pythonw exits 0 -> the .vbs loop ends).
+          try { Invoke-RestMethod "http://localhost:1337/api/quit" | Out-Null } catch {}
+          "PASS: ${{ matrix.os }}"
