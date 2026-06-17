@@ -67,6 +67,23 @@ rewrites `appcast.json` to point at it. The push publishes it. Full details —
 including the rare "major update" path for new bundled binaries — are in
 [packaging/UPDATES.md](packaging/UPDATES.md).
 
+## Windows
+
+A self-contained Windows build (bundled Python + yt-dlp + ffmpeg, x64) is
+produced automatically by GitHub Actions on a `windows-latest` runner and
+published here:
+
+**https://github.com/goldenpathwalkthroughs/tube-ripper/releases/tag/windows-latest**
+
+Download `TubeRipper-Windows.zip`, extract, double-click **`TubeRipper.vbs`**
+(SmartScreen → More info → Run anyway, once). It opens at `http://localhost:1337`.
+See [packaging/INSTALL-Windows.txt](packaging/INSTALL-Windows.txt). Build locally
+on Windows with `packaging\build_win.ps1`; the launcher is
+[packaging/launcher.vbs](packaging/launcher.vbs).
+
+Note: on Windows, Instagram/Facebook cookies are most reliable via **Firefox**
+(Chrome's newer app-bound cookie encryption can block yt-dlp).
+
 ## Or run from source
 
 ```bash
