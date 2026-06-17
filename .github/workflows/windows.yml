@@ -1,0 +1,67 @@
+name: build-windows
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - server.py
+      - index.html
+      - favicon.svg
+      - apple-touch-icon.png
+      - packaging/launcher.vbs
+      - packaging/build_win.ps1
+      - packaging/INSTALL-Windows.txt
+      - .github/workflows/windows.yml
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Windows package
+        shell: pwsh
+        run: ./packaging/build_win.ps1
+
+      - name: Smoke test (boots, serves, downloads)
+        shell: pwsh
+        run: |
+          $app = "build-win\TubeRipper"
+          $env:TR_APP="1"; $env:TR_NO_OPEN="1"; $env:TR_FFMPEG_DIR="$PWD\$app\bin"; $env:PORT="1337"
+          $p = Start-Process -FilePath "$app\python\python.exe" -ArgumentList "$app\app\server.py","--app" -PassThru -WindowStyle Hidden
+          Start-Sleep -Seconds 8
+          $h = Invoke-RestMethod "http://localhost:1337/api/health"
+          "health: ytdlp=$($h.ytdlp) ffmpeg=$($h.ffmpeg) version=$($h.version)"
+          if (-not $h.ytdlp -or -not $h.ffmpeg) { throw "engine not healthy" }
+          $job = Invoke-RestMethod -Method Post "http://localhost:1337/api/download" -ContentType "application/json" -Body '{"url":"https://youtu.be/aqz-KE-bpKQ","quality":"standard"}'
+          $id = $job.job_id
+          for ($i=0; $i -lt 40; $i++) {
+            Start-Sleep -Seconds 3
+            $st = (Invoke-RestMethod "http://localhost:1337/api/progress?id=$id").status
+            if ($st -eq "done" -or $st -eq "error") { break }
+          }
+          "download status: $st"
+          try { Invoke-RestMethod "http://localhost:1337/api/quit" | Out-Null } catch {}
+          if ($st -ne "done") { throw "download did not complete" }
+          "Windows smoke test PASSED"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TubeRipper-Windows
+          path: dist/TubeRipper-Windows.zip
+
+      - name: Publish downloadable release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view windows-latest 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create windows-latest dist/TubeRipper-Windows.zip --title "TUBE-RIPPER - Windows build" --notes "Auto-built from main. Download TubeRipper-Windows.zip, extract, double-click TubeRipper.vbs."
+          } else {
+            gh release upload windows-latest dist/TubeRipper-Windows.zip --clobber
+          }

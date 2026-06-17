@@ -45,9 +45,16 @@ HOME = os.path.realpath(os.path.expanduser("~"))
 # App mode: set by the .app launcher. Changes where we persist state (the app
 # bundle itself is read-only once installed in /Applications) and makes the
 # server open a browser on launch.
+IS_WIN = os.name == "nt"
+IS_MAC = sys.platform == "darwin"
+
 APP_MODE = os.environ.get("TR_APP") == "1"
 if APP_MODE:
-    SUPPORT_DIR = os.path.join(HOME, "Library", "Application Support", "TubeRipper")
+    if IS_WIN:
+        base = os.environ.get("APPDATA") or os.path.join(HOME, "AppData", "Roaming")
+    else:
+        base = os.path.join(HOME, "Library", "Application Support")
+    SUPPORT_DIR = os.path.join(base, "TubeRipper")
     try:
         os.makedirs(SUPPORT_DIR, exist_ok=True)
     except OSError:
@@ -65,9 +72,15 @@ WRAPPED = os.environ.get("TR_WRAPPED") == "1"
 DEFAULT_DEST = os.environ.get("DOWNLOAD_DIR") or os.path.join(HOME, "Downloads")
 
 # Destinations are confined to these roots so a LAN client can't write to
-# arbitrary system paths. Home covers ~/Downloads, ~/Movies, etc.; /Volumes
-# covers external drives.
-ALLOWED_DEST_ROOTS = [HOME, "/Volumes"]
+# arbitrary system paths. Home covers ~/Downloads, ~/Movies, etc. On macOS
+# /Volumes covers external drives; on Windows every drive root is allowed so
+# users can save to D:\ etc.
+if IS_WIN:
+    import string
+    ALLOWED_DEST_ROOTS = [HOME] + [f"{d}:\\" for d in string.ascii_uppercase
+                                if os.path.exists(f"{d}:\\")]
+else:
+    ALLOWED_DEST_ROOTS = [HOME, "/Volumes"]
 
 
 def resolve_dest(dest):
@@ -88,18 +101,23 @@ def resolve_dest(dest):
 
 
 def pick_folder():
-    """Pop a native macOS folder picker; returns chosen POSIX path or ''."""
-    script = ('set f to choose folder with prompt '
-            '"Choose where TUBE-RIPPER saves downloads"\n'
-            'return POSIX path of f')
+    """Pop a native folder picker; returns chosen path or '' (cancel/unsupported)."""
     try:
+        if IS_WIN:
+            ps = ("Add-Type -AssemblyName System.Windows.Forms;"
+                "$d=New-Object System.Windows.Forms.FolderBrowserDialog;"
+                "if($d.ShowDialog() -eq 'OK'){[Console]::Out.Write($d.SelectedPath)}")
+            p = subprocess.run(["powershell", "-NoProfile", "-STA", "-Command", ps],
+                            capture_output=True, text=True, timeout=180)
+            return p.stdout.strip() if p.returncode == 0 else ""
+        script = ('set f to choose folder with prompt '
+                '"Choose where TUBE-RIPPER saves downloads"\n'
+                'return POSIX path of f')
         p = subprocess.run(["osascript", "-e", script],
-                          capture_output=True, text=True, timeout=120)
-        if p.returncode == 0:
-            return p.stdout.strip()
+                        capture_output=True, text=True, timeout=180)
+        return p.stdout.strip() if p.returncode == 0 else ""
     except Exception:
-        pass
-    return ""  # user cancelled or not on macOS
+        return ""
 
 
 # Ensure the default exists at boot (best-effort).
@@ -335,30 +353,36 @@ def lan_ip():
         return "127.0.0.1"
 
 
+_IPV4_RE = re.compile(r"\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b")
+
+
 def tailscale_ip():
     """A Tailscale (100.64.0.0/10 CGNAT) address on this machine, if any —
     lets the phone reach the tool privately from anywhere, no public exposure."""
     net = ipaddress.ip_network("100.64.0.0/10")
-    ifconfig = "/sbin/ifconfig" if os.path.exists("/sbin/ifconfig") else "ifconfig"
+    if IS_WIN:
+        cmd = ["ipconfig"]
+    else:
+        cmd = ["/sbin/ifconfig" if os.path.exists("/sbin/ifconfig") else "ifconfig"]
     try:
-        out = subprocess.run([ifconfig], capture_output=True, text=True, timeout=5).stdout
-        for line in out.splitlines():
-            line = line.strip()
-            if line.startswith("inet "):
-                ip = line.split()[1]
-                try:
-                    if ipaddress.ip_address(ip) in net:
-                        return ip
-                except ValueError:
-                    pass
+        out = subprocess.run(cmd, capture_output=True, text=True, timeout=6).stdout
+        for ip in _IPV4_RE.findall(out):
+            try:
+                if ipaddress.ip_address(ip) in net:
+                    return ip
+            except ValueError:
+                pass
     except Exception:
         pass
     return ""
 
 
 def local_hostname():
-    """The Mac's stable Bonjour name, e.g. 'macbook-pro.local' — resolvable by
-    other Apple devices on the same network without knowing the IP."""
+    """A stable hostname phones can use instead of the IP. On macOS this is the
+    Bonjour '<name>.local'; on Windows mDNS isn't guaranteed, so return '' and
+    let callers fall back to the IP."""
+    if IS_WIN:
+        return ""
     scutil = "/usr/sbin/scutil" if os.path.exists("/usr/sbin/scutil") else "scutil"
     try:
         n = subprocess.run([scutil, "--get", "LocalHostName"],
@@ -415,8 +439,9 @@ _TOOL_CACHE = {}
 def have_ffmpeg():
     if "ffmpeg" not in _TOOL_CACHE:
         d = ffmpeg_dir()
-        _TOOL_CACHE["ffmpeg"] = bool(
-            shutil.which("ffmpeg") or (d and os.path.exists(os.path.join(d, "ffmpeg"))))
+        names = ("ffmpeg.exe",) if IS_WIN else ("ffmpeg",)
+        bundled = d and any(os.path.exists(os.path.join(d, n)) for n in names)
+        _TOOL_CACHE["ffmpeg"] = bool(shutil.which("ffmpeg") or bundled)
     return _TOOL_CACHE["ffmpeg"]
 
 
@@ -1097,12 +1122,14 @@ class Handler(BaseHTTPRequestHandler):
                 fp = (JOBS.get(jid) or {}).get("file_path")
             return self._serve_download(fp)
         if path == "/api/fda":
-            # open System Settings → Privacy & Security → Full Disk Access
-            try:
-                subprocess.Popen(["open",
-                    "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles"])
-            except Exception:
-                pass
+            # macOS only: open Privacy & Security → Full Disk Access. (Windows
+            # has no equivalent — Chrome cookies don't need it there.)
+            if not IS_WIN:
+                try:
+                    subprocess.Popen(["open",
+                        "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles"])
+                except Exception:
+                    pass
             return self._json({"ok": True})
         if path == "/api/open":
             want = (qs.get("dir") or [""])[0]
@@ -1111,7 +1138,10 @@ class Handler(BaseHTTPRequestHandler):
             except ValueError:
                 target = DEFAULT_DEST
             try:
-                subprocess.Popen(["open", target])
+                if IS_WIN:
+                    os.startfile(target)            # noqa: opens in Explorer
+                else:
+                    subprocess.Popen(["open", target])
             except Exception:
                 pass
             return self._json({"ok": True, "dir": target})

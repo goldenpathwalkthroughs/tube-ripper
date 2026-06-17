@@ -1,0 +1,51 @@
+==============================================================
+   TUBE-RIPPER DELUXE 2000  -  install on Windows (10 / 11)
+==============================================================
+
+Everything is bundled - no Python, yt-dlp, ffmpeg or other installs needed.
+64-bit Windows.
+
+--------------------------------------------------------------
+INSTALL
+--------------------------------------------------------------
+1.  Right-click the downloaded ZIP -> "Extract All..."  and pick a
+    folder you own (e.g. your Documents). Keep the whole "TubeRipper"
+    folder together.
+
+2.  Open the TubeRipper folder and DOUBLE-CLICK:
+
+        TubeRipper.vbs
+
+    Windows SmartScreen may say "Windows protected your PC" the first
+    time. Click "More info" -> "Run anyway". (You only do this once.)
+
+    TUBE-RIPPER opens in your default browser at http://localhost:1337
+    There is no window of its own - the browser tab IS the app.
+
+3.  (Optional) Right-click TubeRipper.vbs -> "Create shortcut", and move
+    the shortcut to your Desktop or Start Menu for easy launching.
+
+--------------------------------------------------------------
+USING IT
+--------------------------------------------------------------
+*  Paste a video link, ANALYZE, pick a quality (STANDARD = plays in any
+   player), then RIP IT. Files save to your Downloads folder by default
+   (change it in the SAVE TO box, or click BROWSE...).
+
+*  YouTube works with cookies OFF. Instagram / Facebook reels need you to
+   be signed in: pick the browser you're logged into from SESSION COOKIES
+   (Firefox is most reliable on Windows). It will auto-try this if needed.
+
+*  Phone / other devices on the same Wi-Fi: click USE ON PHONE for the
+   address (use the 192.168.x.x one on Windows) and the PIN.
+
+*  To stop it: click the QUIT button on the page (or end "pythonw.exe" in
+   Task Manager).
+
+--------------------------------------------------------------
+NOTES
+--------------------------------------------------------------
+*  100% local. Nothing is uploaded; it only fetches from the site you ask,
+   on your own PC.
+*  Updates install in place from the page when available.
+*  Only download videos you own or are licensed to download.
